@@ -34,6 +34,8 @@ public partial class OverlayWindow : Window, IOverlayController
 
     public bool IsOverlayVisible => IsVisible;
 
+    public AspectRatioMode AspectRatioMode => _overlayState.AspectRatioMode;
+
     protected override void OnSourceInitialized(EventArgs e)
     {
         base.OnSourceInitialized(e);
@@ -95,6 +97,42 @@ public partial class OverlayWindow : Window, IOverlayController
         OverlayStateChanged?.Invoke(this, EventArgs.Empty);
     }
 
+    public void ToggleOverlayVisibility()
+    {
+        if (IsOverlayVisible)
+        {
+            HideOverlay();
+            return;
+        }
+
+        ShowOverlay();
+    }
+
+    public void ApplyPreset(PresetSize presetSize)
+    {
+        var nextSize = OverlayPresetCalculator.Apply(
+            new Size(Width, Height),
+            presetSize,
+            new Size(MinWidth, MinHeight),
+            _overlayState.IsLocked);
+
+        if (nextSize.Width.Equals(Width) && nextSize.Height.Equals(Height))
+        {
+            return;
+        }
+
+        Width = nextSize.Width;
+        Height = nextSize.Height;
+        UpdateSizeText();
+        OverlayStateChanged?.Invoke(this, EventArgs.Empty);
+    }
+
+    public void SetAspectRatioMode(AspectRatioMode aspectRatioMode)
+    {
+        _overlayState.AspectRatioMode = aspectRatioMode;
+        OverlayStateChanged?.Invoke(this, EventArgs.Empty);
+    }
+
     private void ResizeHandle_DragDelta(object sender, DragDeltaEventArgs e)
     {
         if (!OverlayInteractionGuard.CanResize(_overlayState) || sender is not Thumb thumb)
@@ -105,7 +143,7 @@ public partial class OverlayWindow : Window, IOverlayController
         var handle = GetResizeHandle(thumb.Name);
         var bounds = new Rect(Left, Top, Width, Height);
         var minimumSize = new Size(MinWidth, MinHeight);
-        var resizedBounds = OverlayResizeCalculator.Resize(bounds, handle, e.HorizontalChange, e.VerticalChange, minimumSize);
+        var resizedBounds = OverlayResizeCalculator.Resize(bounds, handle, e.HorizontalChange, e.VerticalChange, minimumSize, _overlayState.AspectRatioMode);
 
         Left = resizedBounds.Left;
         Top = resizedBounds.Top;

@@ -72,4 +72,44 @@ public sealed class OverlayResizeCalculatorTests
 
         Assert.Equal(new Rect(100, 280, 640, 180), resized);
     }
+
+    [Fact]
+    public void ResizeRightEdgeCanConstrainToSixteenByNine()
+    {
+        var resized = OverlayResizeCalculator.Resize(InitialBounds, ResizeHandle.Right, 160, 0, MinimumSize, AspectRatioMode.SixteenByNine);
+
+        Assert.Equal(100, resized.Left);
+        Assert.Equal(100, resized.Top);
+        Assert.Equal(800, resized.Width);
+        Assert.Equal(450, resized.Height);
+    }
+
+    [Fact]
+    public void ResizeBottomEdgeCanConstrainToFourByThree()
+    {
+        var resized = OverlayResizeCalculator.Resize(InitialBounds, ResizeHandle.Bottom, 0, 120, MinimumSize, AspectRatioMode.FourByThree);
+
+        Assert.Equal(100, resized.Left);
+        Assert.Equal(100, resized.Top);
+        Assert.Equal(640, resized.Height * (4.0 / 3.0));
+        Assert.Equal(480, resized.Height);
+    }
+
+    [Fact]
+    public void ResizeCornerUsesHorizontalChangeWhenItIsDominantForAspectRatio()
+    {
+        var resized = OverlayResizeCalculator.Resize(InitialBounds, ResizeHandle.BottomRight, 160, 0, MinimumSize, AspectRatioMode.SixteenByNine);
+
+        Assert.Equal(800, resized.Width);
+        Assert.Equal(450, resized.Height);
+    }
+
+    [Fact]
+    public void ResizeCornerUsesVerticalChangeWhenItIsDominantForAspectRatio()
+    {
+        var resized = OverlayResizeCalculator.Resize(InitialBounds, ResizeHandle.BottomRight, 0, 120, MinimumSize, AspectRatioMode.SixteenByNine);
+
+        Assert.Equal(853.333333, resized.Width, 6);
+        Assert.Equal(480, resized.Height);
+    }
 }

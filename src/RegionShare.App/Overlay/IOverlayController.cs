@@ -8,9 +8,17 @@ public interface IOverlayController
 
     bool IsOverlayVisible { get; }
 
+    AspectRatioMode AspectRatioMode { get; }
+
     void ToggleLock();
 
     void ShowOverlay();
 
     void HideOverlay();
+
+    void ToggleOverlayVisibility();
+
+    void ApplyPreset(PresetSize presetSize);
+
+    void SetAspectRatioMode(AspectRatioMode aspectRatioMode);
 }

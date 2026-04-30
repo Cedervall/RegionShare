@@ -12,6 +12,8 @@
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
@@ -64,7 +66,38 @@
                     Content="Exit" />
         </StackPanel>
 
-        <TextBlock Grid.Row="3"
+        <StackPanel Grid.Row="3"
+                    Margin="0,12,0,0"
+                    Orientation="Horizontal">
+            <Button MinWidth="110"
+                    Padding="10,4"
+                    Click="PresetButton_Click"
+                    Tag="1280x720"
+                    Content="1280 x 720" />
+            <Button Margin="8,0,0,0"
+                    MinWidth="110"
+                    Padding="10,4"
+                    Click="PresetButton_Click"
+                    Tag="1600x900"
+                    Content="1600 x 900" />
+            <Button Margin="8,0,0,0"
+                    MinWidth="110"
+                    Padding="10,4"
+                    Click="PresetButton_Click"
+                    Tag="1920x1080"
+                    Content="1920 x 1080" />
+            <ComboBox x:Name="AspectRatioComboBox"
+                      Margin="12,0,0,0"
+                      MinWidth="130"
+                      SelectionChanged="AspectRatioComboBox_SelectionChanged" />
+        </StackPanel>
+
+        <TextBlock Grid.Row="4"
+                   Margin="0,12,0,0"
+                   Foreground="#9CA3AF"
+                   Text="Hotkeys: Ctrl+Alt+L lock/unlock, Ctrl+Alt+O show/hide overlay." />
+
+        <TextBlock Grid.Row="5"
                    Margin="0,12,0,0"
                    Foreground="#9CA3AF"
                    Text="Share only the Region Share Preview window in Teams. Keep this controls window unshared." />

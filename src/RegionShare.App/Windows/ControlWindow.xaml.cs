@@ -1,6 +1,8 @@
 using System.ComponentModel;
 using System.Windows;
+using System.Windows.Interop;
 using RegionShare.App.Capture;
+using RegionShare.App.Hotkeys;
 using RegionShare.App.Overlay;
 using RegionShare.App.Preview;
 
@@ -12,19 +14,40 @@ public partial class ControlWindow : Window
     private readonly PreviewCaptureController _captureController;
     private readonly IOverlayController _overlayController;
     private readonly IPreviewWindowController _previewWindowController;
+    private readonly IGlobalHotkeyService _hotkeyService;
 
-    public ControlWindow(IScreenCaptureService captureService, Func<CaptureRegion> regionProvider, IOverlayController overlayController, IPreviewWindowController previewWindowController)
+    public ControlWindow(IScreenCaptureService captureService, Func<CaptureRegion> regionProvider, IOverlayController overlayController, IPreviewWindowController previewWindowController, IGlobalHotkeyService hotkeyService)
     {
         _captureService = captureService;
         _captureController = new PreviewCaptureController(captureService, regionProvider);
         _overlayController = overlayController;
         _previewWindowController = previewWindowController;
+        _hotkeyService = hotkeyService;
         _overlayController.OverlayStateChanged += OverlayController_OverlayStateChanged;
         _previewWindowController.PreviewModeChanged += PreviewWindowController_PreviewModeChanged;
 
         InitializeComponent();
+        AspectRatioComboBox.ItemsSource = Enum.GetValues<AspectRatioMode>();
+        AspectRatioComboBox.SelectedItem = _overlayController.AspectRatioMode;
         UpdateControlState();
         UpdateOverlayState();
+    }
+
+    protected override void OnSourceInitialized(EventArgs e)
+    {
+        base.OnSourceInitialized(e);
+
+        _hotkeyService.RegisterLockToggle(() => Dispatcher.Invoke(() =>
+        {
+            _overlayController.ToggleLock();
+            UpdateOverlayState();
+        }));
+        _hotkeyService.RegisterOverlayVisibilityToggle(() => Dispatcher.Invoke(() =>
+        {
+            _overlayController.ToggleOverlayVisibility();
+            UpdateOverlayState();
+        }));
+        _hotkeyService.RegisterWindow(this);
     }
 
     private void CaptureToggleButton_Click(object sender, RoutedEventArgs e)
@@ -63,6 +86,37 @@ public partial class ControlWindow : Window
         UpdateControlState();
     }
 
+    private void PresetButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is not FrameworkElement { Tag: string tag })
+        {
+            return;
+        }
+
+        var preset = tag switch
+        {
+            "1280x720" => PresetSize.Hd,
+            "1600x900" => PresetSize.HdPlus,
+            "1920x1080" => PresetSize.FullHd,
+            _ => null
+        };
+
+        if (preset is null)
+        {
+            return;
+        }
+
+        _overlayController.ApplyPreset(preset);
+    }
+
+    private void AspectRatioComboBox_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
+    {
+        if (AspectRatioComboBox.SelectedItem is AspectRatioMode aspectRatioMode)
+        {
+            _overlayController.SetAspectRatioMode(aspectRatioMode);
+        }
+    }
+
     private void ExitButton_Click(object sender, RoutedEventArgs e)
     {
         Application.Current.Shutdown();
@@ -72,6 +126,7 @@ public partial class ControlWindow : Window
     {
         _overlayController.OverlayStateChanged -= OverlayController_OverlayStateChanged;
         _previewWindowController.PreviewModeChanged -= PreviewWindowController_PreviewModeChanged;
+        _hotkeyService.UnregisterAll();
 
         if (!Application.Current.Dispatcher.HasShutdownStarted)
         {
