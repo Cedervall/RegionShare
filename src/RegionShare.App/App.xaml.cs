@@ -1,4 +1,5 @@
 ﻿using System.Windows;
+using RegionShare.App.Capture;
 using RegionShare.App.Overlay;
 using RegionShare.App.Windows;
 
@@ -11,8 +12,9 @@ public partial class App : Application
         base.OnStartup(e);
 
         var overlayState = new OverlayStateService();
-        var previewWindow = new PreviewWindow();
+        var captureService = new WindowsGraphicsCaptureService();
         var overlayWindow = new OverlayWindow(overlayState);
+        var previewWindow = new PreviewWindow(captureService, overlayWindow.GetCaptureRegion);
 
         previewWindow.Show();
         overlayWindow.Show();

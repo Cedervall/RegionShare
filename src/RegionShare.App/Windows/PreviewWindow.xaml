@@ -7,16 +7,38 @@
         MinWidth="320"
         MinHeight="180"
         Background="#111827">
-    <Grid>
-        <Border Margin="16"
-                BorderBrush="#374151"
-                BorderThickness="1"
-                Background="#030712">
-            <TextBlock HorizontalAlignment="Center"
+    <DockPanel>
+        <StackPanel DockPanel.Dock="Top"
+                    Margin="12"
+                    Orientation="Horizontal">
+            <Button x:Name="CaptureToggleButton"
+                    MinWidth="96"
+                    Padding="10,4"
+                    Click="CaptureToggleButton_Click"
+                    Content="Start capture" />
+            <TextBlock x:Name="CaptureStatusText"
+                       Margin="12,0,0,0"
                        VerticalAlignment="Center"
                        Foreground="#D1D5DB"
-                       FontSize="18"
-                       Text="Capture preview will appear here" />
+                       Text="Stopped" />
+        </StackPanel>
+
+        <Border x:Name="PreviewViewport"
+                Margin="16"
+                BorderBrush="#374151"
+                BorderThickness="1"
+                Background="#030712"
+                SizeChanged="PreviewViewport_SizeChanged">
+            <Grid x:Name="PreviewPlaceholder"
+                  HorizontalAlignment="Center"
+                  VerticalAlignment="Center"
+                  Background="#111827">
+                <TextBlock HorizontalAlignment="Center"
+                           VerticalAlignment="Center"
+                           Foreground="#D1D5DB"
+                           FontSize="18"
+                           Text="Capture preview will appear here" />
+            </Grid>
         </Border>
-    </Grid>
+    </DockPanel>
 </Window>

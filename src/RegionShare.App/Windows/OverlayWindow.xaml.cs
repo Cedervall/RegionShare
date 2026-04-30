@@ -2,6 +2,7 @@ using System.Windows;
 using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using System.Windows.Media;
+using RegionShare.App.Capture;
 using RegionShare.App.Overlay;
 
 namespace RegionShare.App.Windows;
@@ -34,6 +35,15 @@ public partial class OverlayWindow : Window
     {
         base.OnRenderSizeChanged(sizeInfo);
         UpdateSizeText();
+    }
+
+    public CaptureRegion GetCaptureRegion()
+    {
+        return new CaptureRegion(
+            (int)Math.Round(Left),
+            (int)Math.Round(Top),
+            (int)Math.Round(Width),
+            (int)Math.Round(Height));
     }
 
     private void ResizeHandle_DragDelta(object sender, DragDeltaEventArgs e)

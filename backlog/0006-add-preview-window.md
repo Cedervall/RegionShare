@@ -16,3 +16,16 @@ Create the Teams-shareable preview window.
 - Preview can start and stop capture.
 - Tests cover aspect-ratio fit calculations and capture lifecycle logic.
 - `dotnet test` passes.
+
+## Status
+Completed in this ticket batch.
+
+## Verification
+- Preview window remains a normal desktop window titled `Region Share Preview`.
+- Preview window includes start/stop capture controls and visible capture status.
+- Capture toggle behavior is isolated in `PreviewCaptureController`.
+- Aspect-ratio fit math is isolated in `PreviewFitCalculator`.
+- Tests cover start/stop lifecycle behavior and aspect-ratio fit calculations.
+- `dotnet build "RegionShare.slnx"` passed.
+- `dotnet test "RegionShare.slnx"` passed.
+- Reviewer outcome: `pass`.
