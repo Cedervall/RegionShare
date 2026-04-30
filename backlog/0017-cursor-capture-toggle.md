@@ -18,3 +18,16 @@ Allow the preview to optionally include the mouse pointer inside the selected ca
 - Cursor positions are not persisted or logged.
 - Tests cover cursor-in-region coordinate math and toggle behavior.
 - `dotnet test` passes.
+
+## Status
+Completed in this ticket batch.
+
+## Verification
+- Control window includes a cursor capture toggle.
+- GDI capture draws the current cursor into frames only when cursor capture is enabled and the cursor is inside the selected region.
+- Cursor positions are only used per-frame and are not logged or persisted.
+- Cursor capture enabled/disabled preference is persisted as a boolean setting.
+- Tests cover cursor coordinate mapping and cursor capture toggle state.
+- `dotnet build "RegionShare.slnx"` passed.
+- `dotnet test "RegionShare.slnx"` passed.
+- Reviewer outcome: `pass`.

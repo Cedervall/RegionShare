@@ -64,6 +64,13 @@
                     Padding="10,4"
                     Click="ExitButton_Click"
                     Content="Exit" />
+            <CheckBox x:Name="CursorCaptureCheckBox"
+                      Margin="16,0,0,0"
+                      VerticalAlignment="Center"
+                      Foreground="#D1D5DB"
+                      Checked="CursorCaptureCheckBox_Changed"
+                      Unchecked="CursorCaptureCheckBox_Changed"
+                      Content="Capture cursor" />
         </StackPanel>
 
         <StackPanel Grid.Row="3"

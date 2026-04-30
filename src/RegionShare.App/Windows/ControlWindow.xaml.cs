@@ -15,20 +15,23 @@ public partial class ControlWindow : Window
     private readonly IOverlayController _overlayController;
     private readonly IPreviewWindowController _previewWindowController;
     private readonly IGlobalHotkeyService _hotkeyService;
+    private readonly ICursorCaptureSettings _cursorCaptureSettings;
 
-    public ControlWindow(IScreenCaptureService captureService, Func<CaptureRegion> regionProvider, IOverlayController overlayController, IPreviewWindowController previewWindowController, IGlobalHotkeyService hotkeyService)
+    public ControlWindow(IScreenCaptureService captureService, Func<CaptureRegion> regionProvider, IOverlayController overlayController, IPreviewWindowController previewWindowController, IGlobalHotkeyService hotkeyService, ICursorCaptureSettings cursorCaptureSettings)
     {
         _captureService = captureService;
         _captureController = new PreviewCaptureController(captureService, regionProvider);
         _overlayController = overlayController;
         _previewWindowController = previewWindowController;
         _hotkeyService = hotkeyService;
+        _cursorCaptureSettings = cursorCaptureSettings;
         _overlayController.OverlayStateChanged += OverlayController_OverlayStateChanged;
         _previewWindowController.PreviewModeChanged += PreviewWindowController_PreviewModeChanged;
 
         InitializeComponent();
         AspectRatioComboBox.ItemsSource = Enum.GetValues<AspectRatioMode>();
         AspectRatioComboBox.SelectedItem = _overlayController.AspectRatioMode;
+        UpdateCursorCaptureState();
         UpdateControlState();
         UpdateOverlayState();
     }
@@ -117,6 +120,12 @@ public partial class ControlWindow : Window
         }
     }
 
+    private void CursorCaptureCheckBox_Changed(object sender, RoutedEventArgs e)
+    {
+        var state = CursorCaptureToggleController.Apply(CursorCaptureCheckBox.IsChecked == true, _cursorCaptureSettings);
+        ApplyCursorCaptureState(state);
+    }
+
     private void ExitButton_Click(object sender, RoutedEventArgs e)
     {
         Application.Current.Shutdown();
@@ -162,5 +171,17 @@ public partial class ControlWindow : Window
         OverlayLockToggleButton.Content = controlState.LockToggleText;
         OverlayVisibilityToggleButton.Content = controlState.VisibilityToggleText;
         OverlayStatusText.Text = controlState.StatusText;
+    }
+
+    private void UpdateCursorCaptureState()
+    {
+        var state = CursorCaptureControlState.FromEnabled(_cursorCaptureSettings.IsCursorCaptureEnabled);
+        ApplyCursorCaptureState(state);
+    }
+
+    private void ApplyCursorCaptureState(CursorCaptureControlState state)
+    {
+        CursorCaptureCheckBox.IsChecked = state.IsChecked;
+        CursorCaptureCheckBox.Content = state.Label;
     }
 }
