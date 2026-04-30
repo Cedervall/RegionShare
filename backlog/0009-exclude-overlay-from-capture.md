@@ -16,11 +16,12 @@ Ensure the overlay frame is not visible in the captured output.
 - `dotnet test` passes.
 
 ## Status
-Manual validation required before completion.
+Completed after manual validation.
 
 ## Verification
 - Overlay window applies `SetWindowDisplayAffinity` through `WindowCaptureExclusionService` when its handle is initialized.
 - Tests cover the capture exclusion Win32 boundary for zero handles, expected affinity value, and failure propagation.
 - Manual validation steps are documented in `docs/capture-exclusion.md`.
+- Manual validation confirmed the overlay is excluded from the preview while capture is running.
 - `dotnet test "RegionShare.slnx"` passed.
-- Reviewer outcome: pending manual validation.
+- Reviewer outcome: `pass`.
