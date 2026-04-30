@@ -85,11 +85,12 @@ public sealed class GdiScreenCaptureService : IScreenCaptureService, IDisposable
     {
         try
         {
+            using var captureBuffer = new GdiCaptureBuffer();
             using var timer = new PeriodicTimer(CaptureFrameRateCalculator.ToInterval(_captureFrameRateSettings.FramesPerSecond));
             while (await timer.WaitForNextTickAsync(cancellationToken).ConfigureAwait(false))
             {
                 timer.Period = CaptureFrameRateCalculator.ToInterval(_captureFrameRateSettings.FramesPerSecond);
-                CaptureNextFrame();
+                CaptureNextFrame(captureBuffer);
             }
         }
         catch (OperationCanceledException)
@@ -97,12 +98,12 @@ public sealed class GdiScreenCaptureService : IScreenCaptureService, IDisposable
         }
     }
 
-    private void CaptureNextFrame()
+    private void CaptureNextFrame(GdiCaptureBuffer captureBuffer)
     {
         CaptureFramePump.CaptureNextFrame(
             IsCapturing,
             _region,
-            CaptureFrame,
+            region => CaptureFrame(region, captureBuffer),
             frame => FrameCaptured?.Invoke(this, new CapturedFrameEventArgs(frame)),
             Stop,
             exception => CaptureFailed?.Invoke(this, new CaptureFailedEventArgs(exception)));
@@ -116,62 +117,121 @@ public sealed class GdiScreenCaptureService : IScreenCaptureService, IDisposable
         IsCapturing = false;
     }
 
-    private BitmapSource CaptureFrame(CaptureRegion region)
+    private BitmapSource CaptureFrame(CaptureRegion region, GdiCaptureBuffer captureBuffer)
     {
-        var screenDc = GetDC(IntPtr.Zero);
-        if (screenDc == IntPtr.Zero)
+        captureBuffer.Ensure(region);
+        if (!BitBlt(captureBuffer.MemoryDc, 0, 0, region.Width, region.Height, captureBuffer.ScreenDc, region.X, region.Y, CopySource))
         {
-            throw new InvalidOperationException("Unable to get screen device context.");
+            throw new InvalidOperationException("Unable to copy screen region.");
         }
 
-        var memoryDc = IntPtr.Zero;
-        var bitmap = IntPtr.Zero;
-        var previousObject = IntPtr.Zero;
+        DrawCursorIfEnabled(captureBuffer.MemoryDc, region);
 
-        try
+        var source = Imaging.CreateBitmapSourceFromHBitmap(captureBuffer.Bitmap, IntPtr.Zero, System.Windows.Int32Rect.Empty, BitmapSizeOptions.FromEmptyOptions());
+        source.Freeze();
+        return source;
+    }
+
+    private sealed class GdiCaptureBuffer : IDisposable
+    {
+        private int _width;
+        private int _height;
+        private IntPtr _previousObject;
+
+        public IntPtr ScreenDc { get; private set; }
+
+        public IntPtr MemoryDc { get; private set; }
+
+        public IntPtr Bitmap { get; private set; }
+
+        public void Ensure(CaptureRegion region)
         {
-            memoryDc = CreateCompatibleDC(screenDc);
-            if (memoryDc == IntPtr.Zero)
+            EnsureScreenDc();
+            EnsureMemoryDc();
+            EnsureBitmap(region);
+        }
+
+        public void Dispose()
+        {
+            ReleaseBitmap();
+
+            if (MemoryDc != IntPtr.Zero)
+            {
+                DeleteDC(MemoryDc);
+                MemoryDc = IntPtr.Zero;
+            }
+
+            if (ScreenDc != IntPtr.Zero)
+            {
+                ReleaseDC(IntPtr.Zero, ScreenDc);
+                ScreenDc = IntPtr.Zero;
+            }
+        }
+
+        private void EnsureScreenDc()
+        {
+            if (ScreenDc != IntPtr.Zero)
+            {
+                return;
+            }
+
+            ScreenDc = GetDC(IntPtr.Zero);
+            if (ScreenDc == IntPtr.Zero)
+            {
+                throw new InvalidOperationException("Unable to get screen device context.");
+            }
+        }
+
+        private void EnsureMemoryDc()
+        {
+            if (MemoryDc != IntPtr.Zero)
+            {
+                return;
+            }
+
+            MemoryDc = CreateCompatibleDC(ScreenDc);
+            if (MemoryDc == IntPtr.Zero)
             {
                 throw new InvalidOperationException("Unable to create compatible device context.");
             }
+        }
 
-            bitmap = CreateCompatibleBitmap(screenDc, region.Width, region.Height);
-            if (bitmap == IntPtr.Zero)
+        private void EnsureBitmap(CaptureRegion region)
+        {
+            if (Bitmap != IntPtr.Zero && !GdiCaptureResourcePlan.ShouldRecreateBitmap(_width, _height, region))
+            {
+                return;
+            }
+
+            ReleaseBitmap();
+
+            Bitmap = CreateCompatibleBitmap(ScreenDc, region.Width, region.Height);
+            if (Bitmap == IntPtr.Zero)
             {
                 throw new InvalidOperationException("Unable to create compatible bitmap.");
             }
 
-            previousObject = SelectObject(memoryDc, bitmap);
-            if (!BitBlt(memoryDc, 0, 0, region.Width, region.Height, screenDc, region.X, region.Y, CopySource))
-            {
-                throw new InvalidOperationException("Unable to copy screen region.");
-            }
-
-            DrawCursorIfEnabled(memoryDc, region);
-
-            var source = Imaging.CreateBitmapSourceFromHBitmap(bitmap, IntPtr.Zero, System.Windows.Int32Rect.Empty, BitmapSizeOptions.FromEmptyOptions());
-            source.Freeze();
-            return source;
+            _previousObject = SelectObject(MemoryDc, Bitmap);
+            _width = region.Width;
+            _height = region.Height;
         }
-        finally
+
+        private void ReleaseBitmap()
         {
-            if (previousObject != IntPtr.Zero && memoryDc != IntPtr.Zero)
+            if (_previousObject != IntPtr.Zero && MemoryDc != IntPtr.Zero)
             {
-                SelectObject(memoryDc, previousObject);
+                SelectObject(MemoryDc, _previousObject);
+                _previousObject = IntPtr.Zero;
             }
 
-            if (bitmap != IntPtr.Zero)
+            if (Bitmap != IntPtr.Zero)
             {
-                DeleteObject(bitmap);
+                DeleteObject(Bitmap);
+                Bitmap = IntPtr.Zero;
             }
 
-            if (memoryDc != IntPtr.Zero)
-            {
-                DeleteDC(memoryDc);
-            }
-
-            ReleaseDC(IntPtr.Zero, screenDc);
+            _width = 0;
+            _height = 0;
         }
     }
 

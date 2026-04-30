@@ -1,6 +1,7 @@
 using System.Windows;
 using RegionShare.App.Capture;
 using RegionShare.App.Preview;
+using System.Windows.Media.Imaging;
 
 namespace RegionShare.App.Windows;
 
@@ -9,6 +10,7 @@ public partial class PreviewWindow : Window
     private readonly IScreenCaptureService _captureService;
     private readonly IPreviewWindowController _previewWindowController;
     private readonly Func<CaptureRegion> _regionProvider;
+    private readonly LatestFrameDeliveryState<BitmapSource> _latestFrameDelivery = new();
 
     public PreviewWindow(IScreenCaptureService captureService, Func<CaptureRegion> regionProvider, IPreviewWindowController previewWindowController)
     {
@@ -44,11 +46,34 @@ public partial class PreviewWindow : Window
     {
         if (!Dispatcher.CheckAccess())
         {
-            Dispatcher.Invoke(() => CaptureService_FrameCaptured(sender, e));
+            if (_latestFrameDelivery.Enqueue(e.Frame))
+            {
+                Dispatcher.BeginInvoke(ProcessLatestFrame);
+            }
+
             return;
         }
 
-        PreviewImage.Source = e.Frame;
+        ApplyFrame(e.Frame);
+    }
+
+    private void ProcessLatestFrame()
+    {
+        var frame = _latestFrameDelivery.TakeLatest();
+        if (frame is not null)
+        {
+            ApplyFrame(frame);
+        }
+
+        if (_latestFrameDelivery.CompleteDispatchAndShouldQueueAgain())
+        {
+            Dispatcher.BeginInvoke(ProcessLatestFrame);
+        }
+    }
+
+    private void ApplyFrame(BitmapSource frame)
+    {
+        PreviewImage.Source = frame;
         CapturePlaceholderText.Visibility = PreviewPlaceholderState.GetPlaceholderVisibility(true);
     }
 
