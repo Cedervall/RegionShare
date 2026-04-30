@@ -6,13 +6,16 @@ namespace RegionShare.App.Windows;
 
 public partial class PreviewWindow : Window
 {
+    private readonly IScreenCaptureService _captureService;
     private readonly PreviewCaptureController _captureController;
     private readonly Func<CaptureRegion> _regionProvider;
 
     public PreviewWindow(IScreenCaptureService captureService, Func<CaptureRegion> regionProvider)
     {
+        _captureService = captureService;
         _regionProvider = regionProvider;
         _captureController = new PreviewCaptureController(captureService, regionProvider);
+        captureService.FrameCaptured += CaptureService_FrameCaptured;
         InitializeComponent();
         UpdateCaptureState();
         UpdatePreviewLayout();
@@ -32,7 +35,18 @@ public partial class PreviewWindow : Window
     protected override void OnClosed(EventArgs e)
     {
         _captureController.Stop();
+        _captureService.FrameCaptured -= CaptureService_FrameCaptured;
+        if (_captureService is IDisposable disposableCaptureService)
+        {
+            disposableCaptureService.Dispose();
+        }
+
         base.OnClosed(e);
+    }
+
+    private void CaptureService_FrameCaptured(object? sender, CapturedFrameEventArgs e)
+    {
+        PreviewImage.Source = e.Frame;
     }
 
     private void UpdateCaptureState()

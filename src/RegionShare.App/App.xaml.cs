@@ -1,5 +1,6 @@
 ﻿using System.Windows;
 using RegionShare.App.Capture;
+using RegionShare.App.Dpi;
 using RegionShare.App.Overlay;
 using RegionShare.App.Windows;
 
@@ -12,8 +13,8 @@ public partial class App : Application
         base.OnStartup(e);
 
         var overlayState = new OverlayStateService();
-        var captureService = new WindowsGraphicsCaptureService();
-        var overlayWindow = new OverlayWindow(overlayState);
+        var captureService = new GdiScreenCaptureService();
+        var overlayWindow = new OverlayWindow(overlayState, new DpiService(), new WindowCaptureExclusionService());
         var previewWindow = new PreviewWindow(captureService, overlayWindow.GetCaptureRegion);
 
         previewWindow.Show();

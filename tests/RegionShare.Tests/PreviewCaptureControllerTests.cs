@@ -60,6 +60,12 @@ public sealed class PreviewCaptureControllerTests
 
     private sealed class FakeScreenCaptureService : IScreenCaptureService
     {
+        public event EventHandler<CapturedFrameEventArgs>? FrameCaptured
+        {
+            add { }
+            remove { }
+        }
+
         public bool IsCapturing { get; private set; }
 
         public CaptureRegion? StartedRegion { get; private set; }

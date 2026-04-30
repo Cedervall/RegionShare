@@ -3,6 +3,7 @@ using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using System.Windows.Media;
 using RegionShare.App.Capture;
+using RegionShare.App.Dpi;
 using RegionShare.App.Overlay;
 
 namespace RegionShare.App.Windows;
@@ -10,13 +11,23 @@ namespace RegionShare.App.Windows;
 public partial class OverlayWindow : Window
 {
     private readonly IOverlayStateService _overlayState;
+    private readonly IDpiService _dpiService;
+    private readonly IWindowCaptureExclusionService _captureExclusionService;
 
-    public OverlayWindow(IOverlayStateService overlayState)
+    public OverlayWindow(IOverlayStateService overlayState, IDpiService dpiService, IWindowCaptureExclusionService captureExclusionService)
     {
         _overlayState = overlayState;
+        _dpiService = dpiService;
+        _captureExclusionService = captureExclusionService;
         InitializeComponent();
         UpdateSizeText();
         UpdateLockVisualState();
+    }
+
+    protected override void OnSourceInitialized(EventArgs e)
+    {
+        base.OnSourceInitialized(e);
+        _captureExclusionService.ExcludeFromCapture(this);
     }
 
     protected override void OnMouseLeftButtonDown(MouseButtonEventArgs e)
@@ -39,11 +50,8 @@ public partial class OverlayWindow : Window
 
     public CaptureRegion GetCaptureRegion()
     {
-        return new CaptureRegion(
-            (int)Math.Round(Left),
-            (int)Math.Round(Top),
-            (int)Math.Round(Width),
-            (int)Math.Round(Height));
+        var dpiScale = PresentationSource.FromVisual(this)?.CompositionTarget?.TransformToDevice ?? Matrix.Identity;
+        return _dpiService.ToPhysicalRegion(new Rect(Left, Top, Width, Height), dpiScale.M11, dpiScale.M22);
     }
 
     private void ResizeHandle_DragDelta(object sender, DragDeltaEventArgs e)
