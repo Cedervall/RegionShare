@@ -2,27 +2,37 @@ using System.Windows;
 using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.ComponentModel;
 using RegionShare.App.Capture;
 using RegionShare.App.Dpi;
 using RegionShare.App.Overlay;
+using RegionShare.App.Windowing;
 
 namespace RegionShare.App.Windows;
 
-public partial class OverlayWindow : Window
+public partial class OverlayWindow : Window, IOverlayController
 {
     private readonly IOverlayStateService _overlayState;
     private readonly IDpiService _dpiService;
     private readonly IWindowCaptureExclusionService _captureExclusionService;
+    private readonly IWindowClickThroughService _clickThroughService;
 
-    public OverlayWindow(IOverlayStateService overlayState, IDpiService dpiService, IWindowCaptureExclusionService captureExclusionService)
+    public OverlayWindow(IOverlayStateService overlayState, IDpiService dpiService, IWindowCaptureExclusionService captureExclusionService, IWindowClickThroughService clickThroughService)
     {
         _overlayState = overlayState;
         _dpiService = dpiService;
         _captureExclusionService = captureExclusionService;
+        _clickThroughService = clickThroughService;
         InitializeComponent();
         UpdateSizeText();
         UpdateLockVisualState();
     }
+
+    public event EventHandler? OverlayStateChanged;
+
+    public bool IsLocked => _overlayState.IsLocked;
+
+    public bool IsOverlayVisible => IsVisible;
 
     protected override void OnSourceInitialized(EventArgs e)
     {
@@ -48,10 +58,41 @@ public partial class OverlayWindow : Window
         UpdateSizeText();
     }
 
+    protected override void OnClosing(CancelEventArgs e)
+    {
+        if (Application.Current.Dispatcher.HasShutdownStarted)
+        {
+            base.OnClosing(e);
+            return;
+        }
+
+        e.Cancel = true;
+        HideOverlay();
+    }
+
     public CaptureRegion GetCaptureRegion()
     {
         var dpiScale = PresentationSource.FromVisual(this)?.CompositionTarget?.TransformToDevice ?? Matrix.Identity;
         return _dpiService.ToPhysicalRegion(new Rect(Left, Top, Width, Height), dpiScale.M11, dpiScale.M22);
+    }
+
+    public void ToggleLock()
+    {
+        _overlayState.ToggleLock();
+        UpdateLockVisualState();
+        OverlayStateChanged?.Invoke(this, EventArgs.Empty);
+    }
+
+    public void ShowOverlay()
+    {
+        Show();
+        OverlayStateChanged?.Invoke(this, EventArgs.Empty);
+    }
+
+    public void HideOverlay()
+    {
+        Hide();
+        OverlayStateChanged?.Invoke(this, EventArgs.Empty);
     }
 
     private void ResizeHandle_DragDelta(object sender, DragDeltaEventArgs e)
@@ -74,8 +115,7 @@ public partial class OverlayWindow : Window
 
     private void LockToggle_Click(object sender, RoutedEventArgs e)
     {
-        _overlayState.ToggleLock();
-        UpdateLockVisualState();
+        ToggleLock();
     }
 
     private void UpdateSizeText()
@@ -98,6 +138,7 @@ public partial class OverlayWindow : Window
         LockContextMenuItem.Header = _overlayState.IsLocked ? "Unlock region" : "Lock region";
         SizeText.ToolTip = visualState.SizeToolTip;
         SetResizeHandlesEnabled(!_overlayState.IsLocked);
+        _clickThroughService.SetClickThrough(this, _overlayState.IsLocked);
     }
 
     private void SetResizeHandlesEnabled(bool isEnabled)

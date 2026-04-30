@@ -2,6 +2,7 @@
 using RegionShare.App.Capture;
 using RegionShare.App.Dpi;
 using RegionShare.App.Overlay;
+using RegionShare.App.Windowing;
 using RegionShare.App.Windows;
 
 namespace RegionShare.App;
@@ -14,11 +15,11 @@ public partial class App : Application
 
         var overlayState = new OverlayStateService();
         var captureService = new GdiScreenCaptureService();
-        var overlayWindow = new OverlayWindow(overlayState, new DpiService(), new WindowCaptureExclusionService());
-        var previewWindow = new PreviewWindow(captureService, overlayWindow.GetCaptureRegion);
+        var overlayWindow = new OverlayWindow(overlayState, new DpiService(), new WindowCaptureExclusionService(), new WindowClickThroughService());
+        var previewWindow = new PreviewWindow(captureService, overlayWindow.GetCaptureRegion, overlayWindow);
 
-        previewWindow.Show();
         overlayWindow.Show();
+        previewWindow.Show();
     }
 }
 

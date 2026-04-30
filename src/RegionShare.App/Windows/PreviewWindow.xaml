@@ -21,6 +21,23 @@
                        VerticalAlignment="Center"
                        Foreground="#D1D5DB"
                        Text="Stopped" />
+            <Button x:Name="OverlayLockToggleButton"
+                    Margin="24,0,0,0"
+                    MinWidth="96"
+                    Padding="10,4"
+                    Click="OverlayLockToggleButton_Click"
+                    Content="Lock overlay" />
+            <Button x:Name="OverlayVisibilityToggleButton"
+                    Margin="8,0,0,0"
+                    MinWidth="96"
+                    Padding="10,4"
+                    Click="OverlayVisibilityToggleButton_Click"
+                    Content="Hide overlay" />
+            <TextBlock x:Name="OverlayStatusText"
+                       Margin="12,0,0,0"
+                       VerticalAlignment="Center"
+                       Foreground="#D1D5DB"
+                       Text="Overlay unlocked" />
         </StackPanel>
 
         <Border x:Name="PreviewViewport"
@@ -35,7 +52,8 @@
                   Background="#111827">
                 <Image x:Name="PreviewImage"
                        Stretch="Uniform" />
-                <TextBlock HorizontalAlignment="Center"
+                <TextBlock x:Name="CapturePlaceholderText"
+                           HorizontalAlignment="Center"
                            VerticalAlignment="Center"
                            Foreground="#D1D5DB"
                            FontSize="18"

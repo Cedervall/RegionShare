@@ -20,3 +20,17 @@ Fix usability issues discovered during manual review before continuing deeper pl
 - Capture continues from the last selected region when the overlay is hidden or closed.
 - Tests cover visual-state mapping, placeholder visibility state, and click-through/window-mode state where practical.
 - `dotnet test` passes.
+
+## Status
+Completed in this ticket batch.
+
+## Verification
+- Resize handles use a transparent template so they remain usable without obscuring the overlay border.
+- Preview placeholder visibility is controlled by `PreviewPlaceholderState` and is hidden after the first captured frame.
+- Preview window has lock/unlock and show/hide controls for the overlay.
+- Overlay close is treated as hide, allowing capture to continue from the last selected region.
+- Locked overlay applies click-through window style through `IWindowClickThroughService`.
+- Tests cover placeholder visibility, preview overlay control labels, and click-through extended-style mapping.
+- `dotnet build "RegionShare.slnx"` passed.
+- `dotnet test "RegionShare.slnx"` passed.
+- Reviewer outcome: `pass`.
