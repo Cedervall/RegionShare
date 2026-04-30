@@ -15,4 +15,5 @@ public static class OverlayInteractionGuard
 
         return !overlayState.IsLocked;
     }
+
 }
