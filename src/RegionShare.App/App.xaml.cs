@@ -27,7 +27,7 @@ public partial class App : Application
         {
             FramesPerSecond = settings.CaptureFramesPerSecond
         };
-        var captureService = new GdiScreenCaptureService(cursorCaptureSettings, captureFrameRateSettings);
+        var captureService = ScreenCaptureServiceFactory.Create(cursorCaptureSettings, captureFrameRateSettings, new Direct3DDesktopDuplicationSupport());
         var hotkeyService = new GlobalHotkeyService();
         var previewWindowController = new PreviewWindowController();
         var overlayWindow = new OverlayWindow(overlayState, new DpiService(), new WindowCaptureExclusionService(), new WindowClickThroughService());
