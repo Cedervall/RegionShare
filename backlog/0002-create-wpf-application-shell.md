@@ -16,3 +16,15 @@ Create the initial Windows desktop application shell.
 - Preview window appears as a normal shareable desktop window.
 - `dotnet build` passes.
 - `dotnet test` passes.
+
+## Status
+Completed in commit `be37cb2`.
+
+## Verification
+- WPF app project targets .NET 8 for Windows.
+- `OverlayWindow` and `PreviewWindow` are created during app startup.
+- Preview window title is `Region Share Preview`.
+- Initial capture, overlay, DPI, hotkey, and settings service boundaries exist.
+- `dotnet build "RegionShare.slnx"` passed.
+- `dotnet test "RegionShare.slnx"` passed.
+- Reviewer outcome: `pass`.

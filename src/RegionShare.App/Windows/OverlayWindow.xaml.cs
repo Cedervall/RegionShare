@@ -40,6 +40,6 @@ public partial class OverlayWindow : Window
             return;
         }
 
-        SizeText.Text = $"{ActualWidth:0} x {ActualHeight:0}";
+        SizeText.Text = OverlaySizeFormatter.Format(ActualWidth, ActualHeight);
     }
 }

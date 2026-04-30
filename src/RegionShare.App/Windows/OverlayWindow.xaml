@@ -9,6 +9,7 @@
         AllowsTransparency="True"
         Background="Transparent"
         ResizeMode="NoResize"
+        ShowActivated="False"
         ShowInTaskbar="False"
         Topmost="True"
         WindowStyle="None">
@@ -25,6 +26,7 @@
                        Background="#CC111827"
                        Foreground="White"
                        FontWeight="SemiBold"
+                       ToolTip="Unlocked region size"
                        Text="640 x 360" />
         </Border>
     </Grid>
