@@ -66,6 +66,12 @@ public sealed class PreviewCaptureControllerTests
             remove { }
         }
 
+        public event EventHandler<CaptureFailedEventArgs>? CaptureFailed
+        {
+            add { }
+            remove { }
+        }
+
         public bool IsCapturing { get; private set; }
 
         public CaptureRegion? StartedRegion { get; private set; }

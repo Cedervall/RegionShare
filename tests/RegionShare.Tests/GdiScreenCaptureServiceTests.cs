@@ -64,4 +64,17 @@ public sealed class GdiScreenCaptureServiceTests
 
         Assert.Throws<ObjectDisposedException>(() => service.Start(new CaptureRegion(0, 0, 320, 180)));
     }
+
+    [Fact]
+    public void RepeatedStartStopKeepsCaptureStateConsistent()
+    {
+        using var service = new GdiScreenCaptureService();
+
+        service.Start(new CaptureRegion(0, 0, 320, 180));
+        service.Stop();
+        service.Start(new CaptureRegion(10, 10, 320, 180));
+        service.Stop();
+
+        Assert.False(service.IsCapturing);
+    }
 }

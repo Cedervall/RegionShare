@@ -25,6 +25,7 @@ public partial class ControlWindow : Window
         _previewWindowController = previewWindowController;
         _hotkeyService = hotkeyService;
         _cursorCaptureSettings = cursorCaptureSettings;
+        _captureService.CaptureFailed += CaptureService_CaptureFailed;
         _overlayController.OverlayStateChanged += OverlayController_OverlayStateChanged;
         _previewWindowController.PreviewModeChanged += PreviewWindowController_PreviewModeChanged;
 
@@ -136,6 +137,7 @@ public partial class ControlWindow : Window
         _overlayController.OverlayStateChanged -= OverlayController_OverlayStateChanged;
         _previewWindowController.PreviewModeChanged -= PreviewWindowController_PreviewModeChanged;
         _hotkeyService.UnregisterAll();
+        _captureService.CaptureFailed -= CaptureService_CaptureFailed;
 
         if (!Application.Current.Dispatcher.HasShutdownStarted)
         {
@@ -156,12 +158,22 @@ public partial class ControlWindow : Window
         UpdateControlState();
     }
 
+    private void CaptureService_CaptureFailed(object? sender, CaptureFailedEventArgs e)
+    {
+        CaptureErrorText.Text = "Capture stopped: " + e.Exception.Message;
+        UpdateControlState();
+    }
+
     private void UpdateControlState()
     {
         var state = ControlWindowState.FromState(_captureService.IsCapturing, _previewWindowController.Mode);
         CaptureToggleButton.Content = state.CaptureToggleText;
         CaptureStatusText.Text = state.CaptureStatusText;
         PreviewModeToggleButton.Content = state.BorderlessToggleText;
+        if (_captureService.IsCapturing)
+        {
+            CaptureErrorText.Text = string.Empty;
+        }
     }
 
     private void UpdateOverlayState()

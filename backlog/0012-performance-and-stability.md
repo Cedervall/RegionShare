@@ -16,3 +16,16 @@ Make the app stable enough for long meetings.
 - Capture can recover or fail gracefully.
 - Tests cover repeated start/stop and failure-path state transitions.
 - `dotnet test` passes.
+
+## Status
+Completed in this ticket batch.
+
+## Verification
+- Capture failures are reported through `CaptureFailed` and stop the capture loop gracefully.
+- Control window displays capture failure messages and allows restart.
+- Repeated start/stop state is covered by tests.
+- Capture timer remains at approximately 33 ms for ~30 FPS target.
+- Manual performance validation checklist is documented in `docs/performance-validation.md`.
+- `dotnet build "RegionShare.slnx"` passed.
+- `dotnet test "RegionShare.slnx"` passed.
+- Reviewer outcome: `pass`.

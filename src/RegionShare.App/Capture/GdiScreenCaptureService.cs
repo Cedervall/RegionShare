@@ -33,6 +33,8 @@ public sealed class GdiScreenCaptureService : IScreenCaptureService, IDisposable
 
     public event EventHandler<CapturedFrameEventArgs>? FrameCaptured;
 
+    public event EventHandler<CaptureFailedEventArgs>? CaptureFailed;
+
     public bool IsCapturing { get; private set; }
 
     public void Start(CaptureRegion region)
@@ -70,13 +72,13 @@ public sealed class GdiScreenCaptureService : IScreenCaptureService, IDisposable
 
     private void OnCaptureTimerTick(object? sender, EventArgs e)
     {
-        if (!IsCapturing || _region is null)
-        {
-            return;
-        }
-
-        var frame = CaptureFrame(_region);
-        FrameCaptured?.Invoke(this, new CapturedFrameEventArgs(frame));
+        CaptureFramePump.CaptureNextFrame(
+            IsCapturing,
+            _region,
+            CaptureFrame,
+            frame => FrameCaptured?.Invoke(this, new CapturedFrameEventArgs(frame)),
+            Stop,
+            exception => CaptureFailed?.Invoke(this, new CaptureFailedEventArgs(exception)));
     }
 
     private BitmapSource CaptureFrame(CaptureRegion region)
