@@ -31,7 +31,8 @@ public sealed class UserSettingsServiceTests
             IsOverlayVisible = false,
             IsLocked = true,
             AspectRatioMode = AspectRatioMode.SixteenByNine,
-            IsPreviewBorderless = true
+            IsPreviewBorderless = true,
+            CaptureFramesPerSecond = 120
         };
 
         service.Save(settings);

@@ -1,5 +1,6 @@
 namespace RegionShare.App.Settings;
 
+using RegionShare.App.Capture;
 using RegionShare.App.Overlay;
 
 public static class UserSettingsValidator
@@ -9,7 +10,7 @@ public static class UserSettingsValidator
     private const double MinimumPreviewWidth = 320;
     private const double MinimumPreviewHeight = 180;
     private const double MinimumControlWidth = 420;
-    private const double MinimumControlHeight = 180;
+    private const double MinimumControlHeight = 260;
 
     public static UserSettings Sanitize(UserSettings settings)
     {
@@ -27,7 +28,8 @@ public static class UserSettingsValidator
             ControlLeft = SanitizeCoordinate(settings.ControlLeft, UserSettings.Default.ControlLeft),
             ControlTop = SanitizeCoordinate(settings.ControlTop, UserSettings.Default.ControlTop),
             ControlWidth = SanitizeSize(settings.ControlWidth, MinimumControlWidth, UserSettings.Default.ControlWidth),
-            ControlHeight = SanitizeSize(settings.ControlHeight, MinimumControlHeight, UserSettings.Default.ControlHeight)
+            ControlHeight = SanitizeSize(settings.ControlHeight, MinimumControlHeight, UserSettings.Default.ControlHeight),
+            CaptureFramesPerSecond = CaptureFrameRateCalculator.Sanitize(settings.CaptureFramesPerSecond)
         };
     }
 

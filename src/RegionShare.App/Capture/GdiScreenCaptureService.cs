@@ -3,32 +3,34 @@ namespace RegionShare.App.Capture;
 using System.Runtime.InteropServices;
 using System.Windows.Interop;
 using System.Windows.Media.Imaging;
-using System.Windows.Threading;
 
 public sealed class GdiScreenCaptureService : IScreenCaptureService, IDisposable
 {
     private const int CopySource = 0x00CC0020;
     private const int CursorShowing = 0x00000001;
     private const int DrawNormal = 0x0003;
-    private static readonly TimeSpan CaptureInterval = TimeSpan.FromMilliseconds(33);
     private readonly ICursorCaptureSettings _cursorCaptureSettings;
-    private readonly DispatcherTimer _captureTimer;
+    private readonly ICaptureFrameRateSettings _captureFrameRateSettings;
+    private readonly object _syncRoot = new();
     private CaptureRegion? _region;
+    private CancellationTokenSource? _captureCancellation;
+    private Task? _captureTask;
     private bool _isDisposed;
 
     public GdiScreenCaptureService()
-        : this(new CursorCaptureSettings())
+        : this(new CursorCaptureSettings(), new CaptureFrameRateSettings())
     {
     }
 
     public GdiScreenCaptureService(ICursorCaptureSettings cursorCaptureSettings)
+        : this(cursorCaptureSettings, new CaptureFrameRateSettings())
+    {
+    }
+
+    public GdiScreenCaptureService(ICursorCaptureSettings cursorCaptureSettings, ICaptureFrameRateSettings captureFrameRateSettings)
     {
         _cursorCaptureSettings = cursorCaptureSettings;
-        _captureTimer = new DispatcherTimer
-        {
-            Interval = CaptureInterval
-        };
-        _captureTimer.Tick += OnCaptureTimerTick;
+        _captureFrameRateSettings = captureFrameRateSettings;
     }
 
     public event EventHandler<CapturedFrameEventArgs>? FrameCaptured;
@@ -46,15 +48,22 @@ public sealed class GdiScreenCaptureService : IScreenCaptureService, IDisposable
             throw new ArgumentOutOfRangeException(nameof(region), "Capture region must have positive dimensions.");
         }
 
-        _region = region;
-        IsCapturing = true;
-        _captureTimer.Start();
+        lock (_syncRoot)
+        {
+            StopCaptureLoop();
+            _region = region;
+            IsCapturing = true;
+            _captureCancellation = new CancellationTokenSource();
+            _captureTask = Task.Run(() => CaptureLoopAsync(_captureCancellation.Token));
+        }
     }
 
     public void Stop()
     {
-        _captureTimer.Stop();
-        IsCapturing = false;
+        lock (_syncRoot)
+        {
+            StopCaptureLoop();
+        }
     }
 
     public void Dispose()
@@ -64,13 +73,31 @@ public sealed class GdiScreenCaptureService : IScreenCaptureService, IDisposable
             return;
         }
 
-        _captureTimer.Stop();
-        _captureTimer.Tick -= OnCaptureTimerTick;
-        IsCapturing = false;
+        lock (_syncRoot)
+        {
+            StopCaptureLoop();
+        }
+
         _isDisposed = true;
     }
 
-    private void OnCaptureTimerTick(object? sender, EventArgs e)
+    private async Task CaptureLoopAsync(CancellationToken cancellationToken)
+    {
+        try
+        {
+            using var timer = new PeriodicTimer(CaptureFrameRateCalculator.ToInterval(_captureFrameRateSettings.FramesPerSecond));
+            while (await timer.WaitForNextTickAsync(cancellationToken).ConfigureAwait(false))
+            {
+                timer.Period = CaptureFrameRateCalculator.ToInterval(_captureFrameRateSettings.FramesPerSecond);
+                CaptureNextFrame();
+            }
+        }
+        catch (OperationCanceledException)
+        {
+        }
+    }
+
+    private void CaptureNextFrame()
     {
         CaptureFramePump.CaptureNextFrame(
             IsCapturing,
@@ -79,6 +106,14 @@ public sealed class GdiScreenCaptureService : IScreenCaptureService, IDisposable
             frame => FrameCaptured?.Invoke(this, new CapturedFrameEventArgs(frame)),
             Stop,
             exception => CaptureFailed?.Invoke(this, new CaptureFailedEventArgs(exception)));
+    }
+
+    private void StopCaptureLoop()
+    {
+        _captureCancellation?.Cancel();
+        _captureCancellation = null;
+        _captureTask = null;
+        IsCapturing = false;
     }
 
     private BitmapSource CaptureFrame(CaptureRegion region)

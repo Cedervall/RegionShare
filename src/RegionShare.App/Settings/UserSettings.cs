@@ -19,7 +19,8 @@ public sealed record UserSettings(
     double ControlTop,
     double ControlWidth,
     double ControlHeight,
-    bool IsCursorCaptureEnabled)
+    bool IsCursorCaptureEnabled,
+    int CaptureFramesPerSecond)
 {
     public static UserSettings Default { get; } = new(
         100,
@@ -37,6 +38,7 @@ public sealed record UserSettings(
         220,
         220,
         520,
-        220,
-        false);
+        280,
+        false,
+        60);
 }

@@ -29,6 +29,7 @@ public sealed class UserSettingsValidatorTests
             OverlayHeight = double.PositiveInfinity,
             PreviewWidth = double.NaN,
             ControlHeight = -1,
+            CaptureFramesPerSecond = 144,
             AspectRatioMode = (AspectRatioMode)999
         };
 
@@ -38,6 +39,7 @@ public sealed class UserSettingsValidatorTests
         Assert.Equal(UserSettings.Default.OverlayHeight, sanitized.OverlayHeight);
         Assert.Equal(UserSettings.Default.PreviewWidth, sanitized.PreviewWidth);
         Assert.Equal(UserSettings.Default.ControlHeight, sanitized.ControlHeight);
+        Assert.Equal(60, sanitized.CaptureFramesPerSecond);
         Assert.Equal(AspectRatioMode.Free, sanitized.AspectRatioMode);
     }
 }

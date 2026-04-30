@@ -1,5 +1,7 @@
 namespace RegionShare.App.Overlay;
 
+using System.Windows;
+
 public interface IOverlayController
 {
     event EventHandler? OverlayStateChanged;
@@ -10,6 +12,8 @@ public interface IOverlayController
 
     AspectRatioMode AspectRatioMode { get; }
 
+    Rect RegionBounds { get; }
+
     void ToggleLock();
 
     void ShowOverlay();
@@ -19,6 +23,8 @@ public interface IOverlayController
     void ToggleOverlayVisibility();
 
     void ApplyPreset(PresetSize presetSize);
+
+    bool TryApplyRegionBounds(Rect bounds);
 
     void SetAspectRatioMode(AspectRatioMode aspectRatioMode);
 }

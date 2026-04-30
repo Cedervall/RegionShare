@@ -23,16 +23,20 @@ public partial class App : Application
         {
             IsCursorCaptureEnabled = settings.IsCursorCaptureEnabled
         };
-        var captureService = new GdiScreenCaptureService(cursorCaptureSettings);
+        var captureFrameRateSettings = new CaptureFrameRateSettings
+        {
+            FramesPerSecond = settings.CaptureFramesPerSecond
+        };
+        var captureService = new GdiScreenCaptureService(cursorCaptureSettings, captureFrameRateSettings);
         var hotkeyService = new GlobalHotkeyService();
         var previewWindowController = new PreviewWindowController();
         var overlayWindow = new OverlayWindow(overlayState, new DpiService(), new WindowCaptureExclusionService(), new WindowClickThroughService());
         var previewWindow = new PreviewWindow(captureService, overlayWindow.GetCaptureRegion, previewWindowController);
-        var controlWindow = new ControlWindow(captureService, overlayWindow.GetCaptureRegion, overlayWindow, previewWindowController, hotkeyService, cursorCaptureSettings);
+        var controlWindow = new ControlWindow(captureService, overlayWindow.GetCaptureRegion, overlayWindow, previewWindowController, hotkeyService, cursorCaptureSettings, captureFrameRateSettings);
 
         ApplySettings(settings, overlayWindow, previewWindow, controlWindow, previewWindowController);
 
-        Exit += (_, _) => settingsService.Save(CreateSettings(overlayWindow, previewWindow, controlWindow, previewWindowController, cursorCaptureSettings));
+        Exit += (_, _) => settingsService.Save(CreateSettings(overlayWindow, previewWindow, controlWindow, previewWindowController, cursorCaptureSettings, captureFrameRateSettings));
 
         overlayWindow.Show();
         previewWindow.Show();
@@ -68,7 +72,7 @@ public partial class App : Application
         controlWindow.Height = settings.ControlHeight;
     }
 
-    private static UserSettings CreateSettings(OverlayWindow overlayWindow, PreviewWindow previewWindow, ControlWindow controlWindow, IPreviewWindowController previewWindowController, ICursorCaptureSettings cursorCaptureSettings)
+    private static UserSettings CreateSettings(OverlayWindow overlayWindow, PreviewWindow previewWindow, ControlWindow controlWindow, IPreviewWindowController previewWindowController, ICursorCaptureSettings cursorCaptureSettings, ICaptureFrameRateSettings captureFrameRateSettings)
     {
         return new UserSettings(
             overlayWindow.Left,
@@ -87,7 +91,8 @@ public partial class App : Application
             controlWindow.Top,
             controlWindow.Width,
             controlWindow.Height,
-            cursorCaptureSettings.IsCursorCaptureEnabled);
+            cursorCaptureSettings.IsCursorCaptureEnabled,
+            captureFrameRateSettings.FramesPerSecond);
     }
 }
 

@@ -36,6 +36,8 @@ public partial class OverlayWindow : Window, IOverlayController
 
     public AspectRatioMode AspectRatioMode => _overlayState.AspectRatioMode;
 
+    public Rect RegionBounds => new(Left, Top, Width, Height);
+
     protected override void OnSourceInitialized(EventArgs e)
     {
         base.OnSourceInitialized(e);
@@ -125,6 +127,23 @@ public partial class OverlayWindow : Window, IOverlayController
         Height = nextSize.Height;
         UpdateSizeText();
         OverlayStateChanged?.Invoke(this, EventArgs.Empty);
+    }
+
+    public bool TryApplyRegionBounds(Rect bounds)
+    {
+        var appliedBounds = RegionSetupBoundsCalculator.Apply(bounds, new Size(MinWidth, MinHeight), _overlayState.IsLocked);
+        if (appliedBounds.IsEmpty)
+        {
+            return false;
+        }
+
+        Left = appliedBounds.Left;
+        Top = appliedBounds.Top;
+        Width = appliedBounds.Width;
+        Height = appliedBounds.Height;
+        UpdateSizeText();
+        OverlayStateChanged?.Invoke(this, EventArgs.Empty);
+        return true;
     }
 
     public void SetAspectRatioMode(AspectRatioMode aspectRatioMode)

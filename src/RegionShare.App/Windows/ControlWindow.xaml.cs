@@ -16,8 +16,10 @@ public partial class ControlWindow : Window
     private readonly IPreviewWindowController _previewWindowController;
     private readonly IGlobalHotkeyService _hotkeyService;
     private readonly ICursorCaptureSettings _cursorCaptureSettings;
+    private readonly ICaptureFrameRateSettings _captureFrameRateSettings;
+    private RegionSetupWindow? _regionSetupWindow;
 
-    public ControlWindow(IScreenCaptureService captureService, Func<CaptureRegion> regionProvider, IOverlayController overlayController, IPreviewWindowController previewWindowController, IGlobalHotkeyService hotkeyService, ICursorCaptureSettings cursorCaptureSettings)
+    public ControlWindow(IScreenCaptureService captureService, Func<CaptureRegion> regionProvider, IOverlayController overlayController, IPreviewWindowController previewWindowController, IGlobalHotkeyService hotkeyService, ICursorCaptureSettings cursorCaptureSettings, ICaptureFrameRateSettings captureFrameRateSettings)
     {
         _captureService = captureService;
         _captureController = new PreviewCaptureController(captureService, regionProvider);
@@ -25,6 +27,7 @@ public partial class ControlWindow : Window
         _previewWindowController = previewWindowController;
         _hotkeyService = hotkeyService;
         _cursorCaptureSettings = cursorCaptureSettings;
+        _captureFrameRateSettings = captureFrameRateSettings;
         _captureService.CaptureFailed += CaptureService_CaptureFailed;
         _overlayController.OverlayStateChanged += OverlayController_OverlayStateChanged;
         _previewWindowController.PreviewModeChanged += PreviewWindowController_PreviewModeChanged;
@@ -32,7 +35,10 @@ public partial class ControlWindow : Window
         InitializeComponent();
         AspectRatioComboBox.ItemsSource = Enum.GetValues<AspectRatioMode>();
         AspectRatioComboBox.SelectedItem = _overlayController.AspectRatioMode;
+        CaptureFrameRateComboBox.ItemsSource = CaptureFrameRateCalculator.SupportedFramesPerSecond;
+        CaptureFrameRateComboBox.SelectedItem = CaptureFrameRateCalculator.Sanitize(_captureFrameRateSettings.FramesPerSecond);
         UpdateCursorCaptureState();
+        UpdateCaptureFrameRateState();
         UpdateControlState();
         UpdateOverlayState();
     }
@@ -127,6 +133,32 @@ public partial class ControlWindow : Window
         ApplyCursorCaptureState(state);
     }
 
+    private void CaptureFrameRateComboBox_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
+    {
+        if (CaptureFrameRateComboBox.SelectedItem is int framesPerSecond)
+        {
+            var state = CaptureFrameRateToggleController.Apply(framesPerSecond, _captureFrameRateSettings);
+            ApplyCaptureFrameRateState(state);
+        }
+    }
+
+    private void FancyZonesSetupButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (_regionSetupWindow is not null)
+        {
+            _regionSetupWindow.Activate();
+            return;
+        }
+
+        _regionSetupWindow = new RegionSetupWindow(_overlayController.RegionBounds, new Size(320, 180))
+        {
+            Owner = this
+        };
+        _regionSetupWindow.ApplyRequested += RegionSetupWindow_ApplyRequested;
+        _regionSetupWindow.Closed += RegionSetupWindow_Closed;
+        _regionSetupWindow.Show();
+    }
+
     private void ExitButton_Click(object sender, RoutedEventArgs e)
     {
         Application.Current.Shutdown();
@@ -138,6 +170,13 @@ public partial class ControlWindow : Window
         _previewWindowController.PreviewModeChanged -= PreviewWindowController_PreviewModeChanged;
         _hotkeyService.UnregisterAll();
         _captureService.CaptureFailed -= CaptureService_CaptureFailed;
+        if (_regionSetupWindow is not null)
+        {
+            _regionSetupWindow.ApplyRequested -= RegionSetupWindow_ApplyRequested;
+            _regionSetupWindow.Closed -= RegionSetupWindow_Closed;
+            _regionSetupWindow.Close();
+            _regionSetupWindow = null;
+        }
 
         if (!Application.Current.Dispatcher.HasShutdownStarted)
         {
@@ -160,8 +199,40 @@ public partial class ControlWindow : Window
 
     private void CaptureService_CaptureFailed(object? sender, CaptureFailedEventArgs e)
     {
+        if (!Dispatcher.CheckAccess())
+        {
+            Dispatcher.Invoke(() => CaptureService_CaptureFailed(sender, e));
+            return;
+        }
+
         CaptureErrorText.Text = "Capture stopped: " + e.Exception.Message;
         UpdateControlState();
+    }
+
+    private void RegionSetupWindow_ApplyRequested(object? sender, EventArgs e)
+    {
+        if (_regionSetupWindow is null)
+        {
+            return;
+        }
+
+        if (!_overlayController.TryApplyRegionBounds(_regionSetupWindow.GetConfiguredBounds()))
+        {
+            OverlayStatusText.Text = "Unlock overlay before applying setup bounds.";
+            return;
+        }
+
+        UpdateOverlayState();
+    }
+
+    private void RegionSetupWindow_Closed(object? sender, EventArgs e)
+    {
+        if (_regionSetupWindow is not null)
+        {
+            _regionSetupWindow.ApplyRequested -= RegionSetupWindow_ApplyRequested;
+            _regionSetupWindow.Closed -= RegionSetupWindow_Closed;
+            _regionSetupWindow = null;
+        }
     }
 
     private void UpdateControlState()
@@ -191,9 +262,21 @@ public partial class ControlWindow : Window
         ApplyCursorCaptureState(state);
     }
 
+    private void UpdateCaptureFrameRateState()
+    {
+        var state = CaptureFrameRateControlState.FromFramesPerSecond(_captureFrameRateSettings.FramesPerSecond);
+        ApplyCaptureFrameRateState(state);
+    }
+
     private void ApplyCursorCaptureState(CursorCaptureControlState state)
     {
         CursorCaptureCheckBox.IsChecked = state.IsChecked;
         CursorCaptureCheckBox.Content = state.Label;
+    }
+
+    private void ApplyCaptureFrameRateState(CaptureFrameRateControlState state)
+    {
+        CaptureFrameRateComboBox.SelectedItem = state.FramesPerSecond;
+        CaptureFrameRateText.Text = state.Label;
     }
 }

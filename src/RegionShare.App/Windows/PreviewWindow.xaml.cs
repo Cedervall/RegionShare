@@ -42,6 +42,12 @@ public partial class PreviewWindow : Window
 
     private void CaptureService_FrameCaptured(object? sender, CapturedFrameEventArgs e)
     {
+        if (!Dispatcher.CheckAccess())
+        {
+            Dispatcher.Invoke(() => CaptureService_FrameCaptured(sender, e));
+            return;
+        }
+
         PreviewImage.Source = e.Frame;
         CapturePlaceholderText.Visibility = PreviewPlaceholderState.GetPlaceholderVisibility(true);
     }

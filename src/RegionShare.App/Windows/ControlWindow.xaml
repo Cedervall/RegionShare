@@ -3,12 +3,13 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="Region Share Controls"
         Width="520"
-        Height="220"
+        Height="280"
         MinWidth="420"
-        MinHeight="180"
+        MinHeight="260"
         Background="#111827">
     <Grid Margin="16">
         <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
@@ -59,10 +60,10 @@
                     Margin="0,12,0,0"
                     Orientation="Horizontal">
             <Button x:Name="PreviewModeToggleButton"
-                    MinWidth="160"
-                    Padding="10,4"
-                    Click="PreviewModeToggleButton_Click"
-                    Content="Use borderless preview" />
+                     MinWidth="160"
+                     Padding="10,4"
+                     Click="PreviewModeToggleButton_Click"
+                     Content="Use borderless preview" />
             <Button Margin="8,0,0,0"
                     MinWidth="80"
                     Padding="10,4"
@@ -72,12 +73,30 @@
                       Margin="16,0,0,0"
                       VerticalAlignment="Center"
                       Foreground="#D1D5DB"
-                      Checked="CursorCaptureCheckBox_Changed"
-                      Unchecked="CursorCaptureCheckBox_Changed"
-                      Content="Capture cursor" />
+                       Checked="CursorCaptureCheckBox_Changed"
+                       Unchecked="CursorCaptureCheckBox_Changed"
+                       Content="Capture cursor" />
         </StackPanel>
 
         <StackPanel Grid.Row="3"
+                    Margin="0,12,0,0"
+                    Orientation="Horizontal">
+            <Button x:Name="FancyZonesSetupButton"
+                    MinWidth="130"
+                    Padding="10,4"
+                    Click="FancyZonesSetupButton_Click"
+                    Content="FancyZones setup" />
+            <TextBlock x:Name="CaptureFrameRateText"
+                       Margin="16,0,8,0"
+                       VerticalAlignment="Center"
+                       Foreground="#D1D5DB"
+                       Text="Capture FPS:" />
+            <ComboBox x:Name="CaptureFrameRateComboBox"
+                      MinWidth="80"
+                      SelectionChanged="CaptureFrameRateComboBox_SelectionChanged" />
+        </StackPanel>
+
+        <StackPanel Grid.Row="4"
                     Margin="0,12,0,0"
                     Orientation="Horizontal">
             <Button MinWidth="110"
@@ -103,12 +122,12 @@
                       SelectionChanged="AspectRatioComboBox_SelectionChanged" />
         </StackPanel>
 
-        <TextBlock Grid.Row="4"
+        <TextBlock Grid.Row="5"
                    Margin="0,12,0,0"
                    Foreground="#9CA3AF"
                    Text="Hotkeys: Ctrl+Alt+L lock/unlock, Ctrl+Alt+O show/hide overlay." />
 
-        <TextBlock Grid.Row="5"
+        <TextBlock Grid.Row="6"
                    Margin="0,12,0,0"
                    Foreground="#9CA3AF"
                    Text="Share only the Region Share Preview window in Teams. Keep this controls window unshared." />
