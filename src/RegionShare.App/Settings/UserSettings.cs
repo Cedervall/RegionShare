@@ -7,5 +7,36 @@ public sealed record UserSettings(
     double OverlayTop,
     double OverlayWidth,
     double OverlayHeight,
+    bool IsOverlayVisible,
     bool IsLocked,
-    AspectRatioMode AspectRatioMode);
+    AspectRatioMode AspectRatioMode,
+    double PreviewLeft,
+    double PreviewTop,
+    double PreviewWidth,
+    double PreviewHeight,
+    bool IsPreviewBorderless,
+    double ControlLeft,
+    double ControlTop,
+    double ControlWidth,
+    double ControlHeight,
+    bool IsCursorCaptureEnabled)
+{
+    public static UserSettings Default { get; } = new(
+        100,
+        100,
+        1280,
+        720,
+        true,
+        false,
+        AspectRatioMode.Free,
+        160,
+        160,
+        960,
+        540,
+        false,
+        220,
+        220,
+        520,
+        220,
+        false);
+}

@@ -139,6 +139,7 @@ public partial class ControlWindow : Window
     private void OverlayController_OverlayStateChanged(object? sender, EventArgs e)
     {
         UpdateOverlayState();
+        AspectRatioComboBox.SelectedItem = _overlayController.AspectRatioMode;
     }
 
     private void PreviewWindowController_PreviewModeChanged(object? sender, EventArgs e)

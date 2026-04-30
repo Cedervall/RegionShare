@@ -4,6 +4,7 @@ using RegionShare.App.Dpi;
 using RegionShare.App.Hotkeys;
 using RegionShare.App.Overlay;
 using RegionShare.App.Preview;
+using RegionShare.App.Settings;
 using RegionShare.App.Windowing;
 using RegionShare.App.Windows;
 
@@ -16,6 +17,8 @@ public partial class App : Application
         base.OnStartup(e);
 
         var overlayState = new OverlayStateService();
+        var settingsService = new UserSettingsService();
+        var settings = settingsService.Load();
         var captureService = new GdiScreenCaptureService();
         var hotkeyService = new GlobalHotkeyService();
         var previewWindowController = new PreviewWindowController();
@@ -23,9 +26,64 @@ public partial class App : Application
         var previewWindow = new PreviewWindow(captureService, overlayWindow.GetCaptureRegion, previewWindowController);
         var controlWindow = new ControlWindow(captureService, overlayWindow.GetCaptureRegion, overlayWindow, previewWindowController, hotkeyService);
 
+        ApplySettings(settings, overlayWindow, previewWindow, controlWindow, previewWindowController);
+
+        Exit += (_, _) => settingsService.Save(CreateSettings(overlayWindow, previewWindow, controlWindow, previewWindowController));
+
         overlayWindow.Show();
         previewWindow.Show();
         controlWindow.Show();
+
+        if (!settings.IsOverlayVisible)
+        {
+            overlayWindow.HideOverlay();
+        }
+    }
+
+    private static void ApplySettings(UserSettings settings, OverlayWindow overlayWindow, PreviewWindow previewWindow, ControlWindow controlWindow, IPreviewWindowController previewWindowController)
+    {
+        overlayWindow.Left = settings.OverlayLeft;
+        overlayWindow.Top = settings.OverlayTop;
+        overlayWindow.Width = settings.OverlayWidth;
+        overlayWindow.Height = settings.OverlayHeight;
+        overlayWindow.SetAspectRatioMode(settings.AspectRatioMode);
+        if (settings.IsLocked)
+        {
+            overlayWindow.ToggleLock();
+        }
+
+        previewWindow.Left = settings.PreviewLeft;
+        previewWindow.Top = settings.PreviewTop;
+        previewWindow.Width = settings.PreviewWidth;
+        previewWindow.Height = settings.PreviewHeight;
+        previewWindowController.SetMode(settings.IsPreviewBorderless ? PreviewWindowMode.Borderless : PreviewWindowMode.Normal);
+
+        controlWindow.Left = settings.ControlLeft;
+        controlWindow.Top = settings.ControlTop;
+        controlWindow.Width = settings.ControlWidth;
+        controlWindow.Height = settings.ControlHeight;
+    }
+
+    private static UserSettings CreateSettings(OverlayWindow overlayWindow, PreviewWindow previewWindow, ControlWindow controlWindow, IPreviewWindowController previewWindowController)
+    {
+        return new UserSettings(
+            overlayWindow.Left,
+            overlayWindow.Top,
+            overlayWindow.Width,
+            overlayWindow.Height,
+            overlayWindow.IsOverlayVisible,
+            overlayWindow.IsLocked,
+            overlayWindow.AspectRatioMode,
+            previewWindow.Left,
+            previewWindow.Top,
+            previewWindow.Width,
+            previewWindow.Height,
+            previewWindowController.Mode == PreviewWindowMode.Borderless,
+            controlWindow.Left,
+            controlWindow.Top,
+            controlWindow.Width,
+            controlWindow.Height,
+            false);
     }
 }
 

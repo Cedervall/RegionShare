@@ -26,3 +26,18 @@ Remember user preferences between launches.
 - Invalid settings are handled safely.
 - Tests cover serialization, default settings, invalid settings fallback, and exclusion of capture-running/screen-content state.
 - `dotnet test` passes.
+
+## Status
+Completed in this ticket batch.
+
+## Verification
+- Settings are stored locally under `%LOCALAPPDATA%\RegionShare\settings.json`.
+- App restores overlay, preview, and control window size/position.
+- App restores overlay visibility, lock state, aspect ratio mode, and preview borderless mode.
+- Capture running state is not persisted; capture starts stopped each session.
+- Settings model does not persist captured screen content, screenshots, cursor positions, or user activity.
+- Invalid or missing settings fall back to safe defaults.
+- Tests cover default settings, save/load round trip, invalid JSON fallback, and excluded capture/screen-content fields.
+- `dotnet build "RegionShare.slnx"` passed.
+- `dotnet test "RegionShare.slnx"` passed.
+- Reviewer outcome: `pass`.
