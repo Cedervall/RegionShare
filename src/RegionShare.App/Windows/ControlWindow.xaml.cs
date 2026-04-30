@@ -70,15 +70,14 @@ public partial class ControlWindow : Window
 
     protected override void OnClosing(CancelEventArgs e)
     {
-        if (!Application.Current.Dispatcher.HasShutdownStarted)
-        {
-            e.Cancel = true;
-            Hide();
-            return;
-        }
-
         _overlayController.OverlayStateChanged -= OverlayController_OverlayStateChanged;
         _previewWindowController.PreviewModeChanged -= PreviewWindowController_PreviewModeChanged;
+
+        if (!Application.Current.Dispatcher.HasShutdownStarted)
+        {
+            Application.Current.Shutdown();
+        }
+
         base.OnClosing(e);
     }
 

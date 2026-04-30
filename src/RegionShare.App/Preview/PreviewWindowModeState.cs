@@ -8,7 +8,7 @@ public sealed record PreviewWindowModeState(WindowStyle WindowStyle, ResizeMode 
     {
         return mode switch
         {
-            PreviewWindowMode.Borderless => new PreviewWindowModeState(WindowStyle.None, ResizeMode.CanResize, new Thickness(0)),
+            PreviewWindowMode.Borderless => new PreviewWindowModeState(WindowStyle.None, ResizeMode.NoResize, new Thickness(0)),
             _ => new PreviewWindowModeState(WindowStyle.SingleBorderWindow, ResizeMode.CanResize, new Thickness(0))
         };
     }

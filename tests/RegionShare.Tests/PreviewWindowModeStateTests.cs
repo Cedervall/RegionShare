@@ -21,7 +21,7 @@ public sealed class PreviewWindowModeStateTests
         var state = PreviewWindowModeState.FromMode(PreviewWindowMode.Borderless);
 
         Assert.Equal(WindowStyle.None, state.WindowStyle);
-        Assert.Equal(ResizeMode.CanResize, state.ResizeMode);
+        Assert.Equal(ResizeMode.NoResize, state.ResizeMode);
         Assert.Equal(new Thickness(0), state.ContentMargin);
     }
 }

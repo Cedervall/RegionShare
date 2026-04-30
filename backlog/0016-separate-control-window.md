@@ -12,7 +12,7 @@ Keep the Teams-shared preview window clean by moving all controls into a separat
 - Apply borderless mode immediately to `PreviewWindow`.
 - Closing `PreviewWindow` exits the whole app and closes other windows.
 - Closing or hiding `OverlayWindow` keeps capture running from the last selected region.
-- Decide whether closing `ControlWindow` hides it or exits only through explicit `Exit` control.
+- Closing `ControlWindow` exits the whole app.
 
 ## Acceptance Criteria
 - Preview window contains only captured content and no control buttons/status text.
@@ -20,6 +20,8 @@ Keep the Teams-shared preview window clean by moving all controls into a separat
 - Borderless preview can be toggled from the control window.
 - Borderless preview remains shareable in Teams as a normal application window.
 - Preview close stops capture, disposes capture resources, closes other windows, and shuts down the app.
+- Control window close shuts down the app.
+- Borderless preview has no resize frame or visible window chrome.
 - Overlay close/hide does not stop capture.
 - Tests cover preview window mode state, control label state, and app lifecycle/controller behavior where practical.
 - `dotnet test` passes.
@@ -32,7 +34,8 @@ Completed in this ticket batch.
 - Removed controls from `PreviewWindow`; preview now contains only the capture viewport.
 - Added `PreviewWindowController` and `PreviewWindowModeState` for normal/borderless mode switching.
 - Closing `PreviewWindow` disposes capture resources and shuts down the app.
-- Closing `ControlWindow` hides the control window unless the app is shutting down.
+- Closing `ControlWindow` shuts down the app.
+- Borderless preview uses `WindowStyle.None` and `ResizeMode.NoResize` to avoid a visible resize frame.
 - Tests cover control labels, preview mode state, and preview mode controller events.
 - `dotnet build "RegionShare.slnx"` passed.
 - `dotnet test "RegionShare.slnx"` passed.
