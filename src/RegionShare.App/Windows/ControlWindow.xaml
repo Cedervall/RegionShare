@@ -1,0 +1,72 @@
+<Window x:Class="RegionShare.App.Windows.ControlWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Region Share Controls"
+        Width="520"
+        Height="220"
+        MinWidth="420"
+        MinHeight="180"
+        Background="#111827">
+    <Grid Margin="16">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <StackPanel Orientation="Horizontal">
+            <Button x:Name="CaptureToggleButton"
+                    MinWidth="110"
+                    Padding="10,4"
+                    Click="CaptureToggleButton_Click"
+                    Content="Start capture" />
+            <TextBlock x:Name="CaptureStatusText"
+                       Margin="12,0,0,0"
+                       VerticalAlignment="Center"
+                       Foreground="#D1D5DB"
+                       Text="Stopped" />
+        </StackPanel>
+
+        <StackPanel Grid.Row="1"
+                    Margin="0,12,0,0"
+                    Orientation="Horizontal">
+            <Button x:Name="OverlayLockToggleButton"
+                    MinWidth="110"
+                    Padding="10,4"
+                    Click="OverlayLockToggleButton_Click"
+                    Content="Lock overlay" />
+            <Button x:Name="OverlayVisibilityToggleButton"
+                    Margin="8,0,0,0"
+                    MinWidth="110"
+                    Padding="10,4"
+                    Click="OverlayVisibilityToggleButton_Click"
+                    Content="Hide overlay" />
+            <TextBlock x:Name="OverlayStatusText"
+                       Margin="12,0,0,0"
+                       VerticalAlignment="Center"
+                       Foreground="#D1D5DB"
+                       Text="Overlay unlocked" />
+        </StackPanel>
+
+        <StackPanel Grid.Row="2"
+                    Margin="0,12,0,0"
+                    Orientation="Horizontal">
+            <Button x:Name="PreviewModeToggleButton"
+                    MinWidth="160"
+                    Padding="10,4"
+                    Click="PreviewModeToggleButton_Click"
+                    Content="Use borderless preview" />
+            <Button Margin="8,0,0,0"
+                    MinWidth="80"
+                    Padding="10,4"
+                    Click="ExitButton_Click"
+                    Content="Exit" />
+        </StackPanel>
+
+        <TextBlock Grid.Row="3"
+                   Margin="0,12,0,0"
+                   Foreground="#9CA3AF"
+                   Text="Share only the Region Share Preview window in Teams. Keep this controls window unshared." />
+    </Grid>
+</Window>

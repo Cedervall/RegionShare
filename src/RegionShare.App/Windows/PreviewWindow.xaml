@@ -6,44 +6,10 @@
         Height="540"
         MinWidth="320"
         MinHeight="180"
-        Background="#111827">
-    <DockPanel>
-        <StackPanel DockPanel.Dock="Top"
-                    Margin="12"
-                    Orientation="Horizontal">
-            <Button x:Name="CaptureToggleButton"
-                    MinWidth="96"
-                    Padding="10,4"
-                    Click="CaptureToggleButton_Click"
-                    Content="Start capture" />
-            <TextBlock x:Name="CaptureStatusText"
-                       Margin="12,0,0,0"
-                       VerticalAlignment="Center"
-                       Foreground="#D1D5DB"
-                       Text="Stopped" />
-            <Button x:Name="OverlayLockToggleButton"
-                    Margin="24,0,0,0"
-                    MinWidth="96"
-                    Padding="10,4"
-                    Click="OverlayLockToggleButton_Click"
-                    Content="Lock overlay" />
-            <Button x:Name="OverlayVisibilityToggleButton"
-                    Margin="8,0,0,0"
-                    MinWidth="96"
-                    Padding="10,4"
-                    Click="OverlayVisibilityToggleButton_Click"
-                    Content="Hide overlay" />
-            <TextBlock x:Name="OverlayStatusText"
-                       Margin="12,0,0,0"
-                       VerticalAlignment="Center"
-                       Foreground="#D1D5DB"
-                       Text="Overlay unlocked" />
-        </StackPanel>
-
+        Background="#030712">
+    <Grid>
         <Border x:Name="PreviewViewport"
-                Margin="16"
-                BorderBrush="#374151"
-                BorderThickness="1"
+                BorderThickness="0"
                 Background="#030712"
                 SizeChanged="PreviewViewport_SizeChanged">
             <Grid x:Name="PreviewPlaceholder"
@@ -60,5 +26,5 @@
                            Text="Capture preview will appear here" />
             </Grid>
         </Border>
-    </DockPanel>
+    </Grid>
 </Window>

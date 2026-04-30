@@ -1,6 +1,5 @@
 using System.Windows;
 using RegionShare.App.Capture;
-using RegionShare.App.Overlay;
 using RegionShare.App.Preview;
 
 namespace RegionShare.App.Windows;
@@ -8,28 +7,19 @@ namespace RegionShare.App.Windows;
 public partial class PreviewWindow : Window
 {
     private readonly IScreenCaptureService _captureService;
-    private readonly PreviewCaptureController _captureController;
-    private readonly IOverlayController _overlayController;
+    private readonly IPreviewWindowController _previewWindowController;
     private readonly Func<CaptureRegion> _regionProvider;
 
-    public PreviewWindow(IScreenCaptureService captureService, Func<CaptureRegion> regionProvider, IOverlayController overlayController)
+    public PreviewWindow(IScreenCaptureService captureService, Func<CaptureRegion> regionProvider, IPreviewWindowController previewWindowController)
     {
         _captureService = captureService;
-        _overlayController = overlayController;
+        _previewWindowController = previewWindowController;
         _regionProvider = regionProvider;
-        _captureController = new PreviewCaptureController(captureService, regionProvider);
         captureService.FrameCaptured += CaptureService_FrameCaptured;
-        overlayController.OverlayStateChanged += OverlayController_StateChanged;
+        previewWindowController.PreviewModeChanged += PreviewWindowController_PreviewModeChanged;
         InitializeComponent();
-        UpdateCaptureState();
-        UpdateOverlayState();
+        UpdatePreviewMode();
         UpdatePreviewLayout();
-    }
-
-    private void CaptureToggleButton_Click(object sender, RoutedEventArgs e)
-    {
-        _captureController.Toggle();
-        UpdateCaptureState();
     }
 
     private void PreviewViewport_SizeChanged(object sender, SizeChangedEventArgs e)
@@ -37,36 +27,16 @@ public partial class PreviewWindow : Window
         UpdatePreviewLayout();
     }
 
-    private void OverlayLockToggleButton_Click(object sender, RoutedEventArgs e)
-    {
-        _overlayController.ToggleLock();
-        UpdateOverlayState();
-    }
-
-    private void OverlayVisibilityToggleButton_Click(object sender, RoutedEventArgs e)
-    {
-        if (_overlayController.IsOverlayVisible)
-        {
-            _overlayController.HideOverlay();
-        }
-        else
-        {
-            _overlayController.ShowOverlay();
-        }
-
-        UpdateOverlayState();
-    }
-
     protected override void OnClosed(EventArgs e)
     {
-        _captureController.Stop();
         _captureService.FrameCaptured -= CaptureService_FrameCaptured;
-        _overlayController.OverlayStateChanged -= OverlayController_StateChanged;
+        _previewWindowController.PreviewModeChanged -= PreviewWindowController_PreviewModeChanged;
         if (_captureService is IDisposable disposableCaptureService)
         {
             disposableCaptureService.Dispose();
         }
 
+        Application.Current.Shutdown();
         base.OnClosed(e);
     }
 
@@ -76,24 +46,17 @@ public partial class PreviewWindow : Window
         CapturePlaceholderText.Visibility = PreviewPlaceholderState.GetPlaceholderVisibility(true);
     }
 
-    private void OverlayController_StateChanged(object? sender, EventArgs e)
+    private void PreviewWindowController_PreviewModeChanged(object? sender, EventArgs e)
     {
-        UpdateOverlayState();
+        UpdatePreviewMode();
     }
 
-    private void UpdateCaptureState()
+    private void UpdatePreviewMode()
     {
-        CaptureToggleButton.Content = _captureController.IsCapturing ? "Stop capture" : "Start capture";
-        CaptureStatusText.Text = _captureController.IsCapturing ? "Capturing" : "Stopped";
-    }
-
-    private void UpdateOverlayState()
-    {
-        var controlState = PreviewOverlayControlState.FromOverlayState(_overlayController.IsLocked, _overlayController.IsOverlayVisible);
-
-        OverlayLockToggleButton.Content = controlState.LockToggleText;
-        OverlayVisibilityToggleButton.Content = controlState.VisibilityToggleText;
-        OverlayStatusText.Text = controlState.StatusText;
+        var state = PreviewWindowModeState.FromMode(_previewWindowController.Mode);
+        WindowStyle = state.WindowStyle;
+        ResizeMode = state.ResizeMode;
+        PreviewViewport.Margin = state.ContentMargin;
     }
 
     private void UpdatePreviewLayout()

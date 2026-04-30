@@ -23,3 +23,17 @@ Keep the Teams-shared preview window clean by moving all controls into a separat
 - Overlay close/hide does not stop capture.
 - Tests cover preview window mode state, control label state, and app lifecycle/controller behavior where practical.
 - `dotnet test` passes.
+
+## Status
+Completed in this ticket batch.
+
+## Verification
+- Added `ControlWindow` for capture, overlay visibility/lock, preview borderless toggle, and exit controls.
+- Removed controls from `PreviewWindow`; preview now contains only the capture viewport.
+- Added `PreviewWindowController` and `PreviewWindowModeState` for normal/borderless mode switching.
+- Closing `PreviewWindow` disposes capture resources and shuts down the app.
+- Closing `ControlWindow` hides the control window unless the app is shutting down.
+- Tests cover control labels, preview mode state, and preview mode controller events.
+- `dotnet build "RegionShare.slnx"` passed.
+- `dotnet test "RegionShare.slnx"` passed.
+- Reviewer outcome: `pass`.
