@@ -1,0 +1,8 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/RegionShare.App/RegionShare.App.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/RegionShare.Tests/RegionShare.Tests.csproj" />
+  </Folder>
+</Solution>

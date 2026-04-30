@@ -1,0 +1,31 @@
+<Window x:Class="RegionShare.App.Windows.OverlayWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Region Share Overlay"
+        Width="640"
+        Height="360"
+        MinWidth="320"
+        MinHeight="180"
+        AllowsTransparency="True"
+        Background="Transparent"
+        ResizeMode="NoResize"
+        ShowInTaskbar="False"
+        Topmost="True"
+        WindowStyle="None">
+    <Grid>
+        <Border x:Name="FrameBorder"
+                BorderBrush="#22C55E"
+                BorderThickness="3"
+                Background="#01000000">
+            <TextBlock x:Name="SizeText"
+                       HorizontalAlignment="Center"
+                       VerticalAlignment="Top"
+                       Margin="0,8,0,0"
+                       Padding="8,3"
+                       Background="#CC111827"
+                       Foreground="White"
+                       FontWeight="SemiBold"
+                       Text="640 x 360" />
+        </Border>
+    </Grid>
+</Window>
