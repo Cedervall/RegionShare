@@ -19,6 +19,14 @@
                 BorderBrush="#22C55E"
                 BorderThickness="3"
                 Background="#01000000">
+            <Border.ContextMenu>
+                <ContextMenu>
+                    <MenuItem x:Name="LockContextMenuItem"
+                              Header="Lock region"
+                              Click="LockToggle_Click" />
+                </ContextMenu>
+            </Border.ContextMenu>
+
             <TextBlock x:Name="SizeText"
                        HorizontalAlignment="Center"
                        VerticalAlignment="Top"
@@ -30,6 +38,28 @@
                        ToolTip="Unlocked region size"
                        Text="640 x 360" />
         </Border>
+
+        <StackPanel HorizontalAlignment="Left"
+                    VerticalAlignment="Top"
+                    Margin="8"
+                    Orientation="Horizontal">
+            <Button x:Name="LockToggleButton"
+                    MinWidth="64"
+                    Padding="8,3"
+                    Background="#DD111827"
+                    BorderBrush="#6B7280"
+                    Foreground="White"
+                    Click="LockToggle_Click"
+                    Content="Lock" />
+            <TextBlock x:Name="LockStatusText"
+                       Margin="8,0,0,0"
+                       VerticalAlignment="Center"
+                       Padding="8,3"
+                       Background="#CC111827"
+                       Foreground="White"
+                       FontWeight="SemiBold"
+                       Text="Unlocked" />
+        </StackPanel>
 
         <primitives:Thumb x:Name="TopLeftResizeHandle"
                           Width="16"

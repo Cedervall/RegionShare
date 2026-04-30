@@ -1,6 +1,7 @@
 using System.Windows;
 using System.Windows.Controls.Primitives;
 using System.Windows.Input;
+using System.Windows.Media;
 using RegionShare.App.Overlay;
 
 namespace RegionShare.App.Windows;
@@ -14,13 +15,14 @@ public partial class OverlayWindow : Window
         _overlayState = overlayState;
         InitializeComponent();
         UpdateSizeText();
+        UpdateLockVisualState();
     }
 
     protected override void OnMouseLeftButtonDown(MouseButtonEventArgs e)
     {
         base.OnMouseLeftButtonDown(e);
 
-        if (_overlayState.IsLocked)
+        if (!OverlayInteractionGuard.CanMove(_overlayState))
         {
             return;
         }
@@ -36,7 +38,7 @@ public partial class OverlayWindow : Window
 
     private void ResizeHandle_DragDelta(object sender, DragDeltaEventArgs e)
     {
-        if (_overlayState.IsLocked || sender is not Thumb thumb)
+        if (!OverlayInteractionGuard.CanResize(_overlayState) || sender is not Thumb thumb)
         {
             return;
         }
@@ -52,6 +54,12 @@ public partial class OverlayWindow : Window
         Height = resizedBounds.Height;
     }
 
+    private void LockToggle_Click(object sender, RoutedEventArgs e)
+    {
+        _overlayState.ToggleLock();
+        UpdateLockVisualState();
+    }
+
     private void UpdateSizeText()
     {
         if (SizeText is null)
@@ -60,6 +68,30 @@ public partial class OverlayWindow : Window
         }
 
         SizeText.Text = OverlaySizeFormatter.Format(ActualWidth, ActualHeight);
+    }
+
+    private void UpdateLockVisualState()
+    {
+        var visualState = OverlayLockVisualState.FromLockState(_overlayState.IsLocked);
+
+        FrameBorder.BorderBrush = (Brush)new BrushConverter().ConvertFromString(visualState.BorderBrush)!;
+        LockToggleButton.Content = visualState.ToggleText;
+        LockStatusText.Text = visualState.StatusText;
+        LockContextMenuItem.Header = _overlayState.IsLocked ? "Unlock region" : "Lock region";
+        SizeText.ToolTip = visualState.SizeToolTip;
+        SetResizeHandlesEnabled(!_overlayState.IsLocked);
+    }
+
+    private void SetResizeHandlesEnabled(bool isEnabled)
+    {
+        TopLeftResizeHandle.IsEnabled = isEnabled;
+        TopResizeHandle.IsEnabled = isEnabled;
+        TopRightResizeHandle.IsEnabled = isEnabled;
+        RightResizeHandle.IsEnabled = isEnabled;
+        BottomRightResizeHandle.IsEnabled = isEnabled;
+        BottomResizeHandle.IsEnabled = isEnabled;
+        BottomLeftResizeHandle.IsEnabled = isEnabled;
+        LeftResizeHandle.IsEnabled = isEnabled;
     }
 
     private static ResizeHandle GetResizeHandle(string name)
