@@ -8,6 +8,7 @@
         MinHeight="180"
         Background="#111827"
         ResizeMode="CanResize"
+        ShowInTaskbar="True"
         WindowStyle="SingleBorderWindow">
     <Grid>
         <Border Margin="8"
@@ -21,7 +22,7 @@
                            Foreground="#D1D5DB"
                            TextAlignment="Center"
                            TextWrapping="Wrap"
-                           Text="Snap or resize this standard window with FancyZones, then apply its bounds to the transparent capture overlay." />
+                           Text="Snap or resize this standard window with FancyZones or Windows Snap, then click Apply. The transparent green overlay is hidden while this setup window is active." />
 
                 <StackPanel HorizontalAlignment="Right"
                             VerticalAlignment="Bottom"

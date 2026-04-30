@@ -18,6 +18,7 @@ public partial class ControlWindow : Window
     private readonly ICursorCaptureSettings _cursorCaptureSettings;
     private readonly ICaptureFrameRateSettings _captureFrameRateSettings;
     private RegionSetupWindow? _regionSetupWindow;
+    private bool _restoreOverlayAfterRegionSetup;
 
     public ControlWindow(IScreenCaptureService captureService, Func<CaptureRegion> regionProvider, IOverlayController overlayController, IPreviewWindowController previewWindowController, IGlobalHotkeyService hotkeyService, ICursorCaptureSettings cursorCaptureSettings, ICaptureFrameRateSettings captureFrameRateSettings)
     {
@@ -150,10 +151,13 @@ public partial class ControlWindow : Window
             return;
         }
 
-        _regionSetupWindow = new RegionSetupWindow(_overlayController.RegionBounds, new Size(320, 180))
+        _restoreOverlayAfterRegionSetup = _overlayController.IsOverlayVisible;
+        if (_restoreOverlayAfterRegionSetup)
         {
-            Owner = this
-        };
+            _overlayController.HideOverlay();
+        }
+
+        _regionSetupWindow = new RegionSetupWindow(_overlayController.RegionBounds, new Size(320, 180));
         _regionSetupWindow.ApplyRequested += RegionSetupWindow_ApplyRequested;
         _regionSetupWindow.Closed += RegionSetupWindow_Closed;
         _regionSetupWindow.Show();
@@ -222,6 +226,12 @@ public partial class ControlWindow : Window
             return;
         }
 
+        if (_restoreOverlayAfterRegionSetup)
+        {
+            _overlayController.ShowOverlay();
+        }
+
+        _regionSetupWindow.Close();
         UpdateOverlayState();
     }
 
@@ -233,6 +243,13 @@ public partial class ControlWindow : Window
             _regionSetupWindow.Closed -= RegionSetupWindow_Closed;
             _regionSetupWindow = null;
         }
+
+        if (_restoreOverlayAfterRegionSetup && !_overlayController.IsOverlayVisible)
+        {
+            _overlayController.ShowOverlay();
+        }
+
+        _restoreOverlayAfterRegionSetup = false;
     }
 
     private void UpdateControlState()
