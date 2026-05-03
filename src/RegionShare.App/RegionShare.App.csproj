@@ -3,6 +3,10 @@
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
     <TargetFramework>net8.0-windows</TargetFramework>
+    <Version>0.1.0</Version>
+    <AssemblyName>RegionShare</AssemblyName>
+    <Product>RegionShare</Product>
+    <ApplicationIcon Condition="Exists('Assets\RegionShare.ico')">Assets\RegionShare.ico</ApplicationIcon>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <UseWPF>true</UseWPF>

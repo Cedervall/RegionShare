@@ -7,5 +7,6 @@ obj/
 *.rsuser
 TestResults/
 coverage/
+artifacts/
 *.nupkg
 *.snupkg
