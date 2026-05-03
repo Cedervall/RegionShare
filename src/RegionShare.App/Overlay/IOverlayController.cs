@@ -10,6 +10,10 @@ public interface IOverlayController
 
     bool IsOverlayVisible { get; }
 
+    bool IsStatusVisible { get; }
+
+    bool IsLatencyVisible { get; }
+
     AspectRatioMode AspectRatioMode { get; }
 
     Rect RegionBounds { get; }
@@ -27,4 +31,8 @@ public interface IOverlayController
     bool TryApplyRegionBounds(Rect bounds);
 
     void SetAspectRatioMode(AspectRatioMode aspectRatioMode);
+
+    void SetStatusVisibility(bool isVisible);
+
+    void SetLatencyVisibility(bool isVisible);
 }

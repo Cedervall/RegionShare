@@ -20,7 +20,9 @@ public sealed record UserSettings(
     double ControlWidth,
     double ControlHeight,
     bool IsCursorCaptureEnabled,
-    int CaptureFramesPerSecond)
+    int CaptureFramesPerSecond,
+    bool? IsOverlayStatusVisible,
+    bool? IsOverlayLatencyVisible)
 {
     public static UserSettings Default { get; } = new(
         100,
@@ -38,7 +40,9 @@ public sealed record UserSettings(
         220,
         220,
         520,
-        280,
+        560,
         false,
-        60);
+        60,
+        true,
+        true);
 }

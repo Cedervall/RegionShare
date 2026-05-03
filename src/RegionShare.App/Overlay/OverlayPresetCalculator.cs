@@ -8,11 +8,6 @@ public static class OverlayPresetCalculator
     {
         ArgumentNullException.ThrowIfNull(presetSize);
 
-        if (isLocked)
-        {
-            return currentSize;
-        }
-
         return new Size(
             Math.Max(presetSize.Width, minimumSize.Width),
             Math.Max(presetSize.Height, minimumSize.Height));

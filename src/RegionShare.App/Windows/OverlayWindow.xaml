@@ -55,16 +55,7 @@
                     VerticalAlignment="Top"
                     Margin="8"
                     Orientation="Horizontal">
-            <Button x:Name="LockToggleButton"
-                    MinWidth="64"
-                    Padding="8,3"
-                    Background="#DD111827"
-                    BorderBrush="#6B7280"
-                    Foreground="White"
-                    Click="LockToggle_Click"
-                    Content="Lock" />
             <TextBlock x:Name="LockStatusText"
-                       Margin="8,0,0,0"
                        VerticalAlignment="Center"
                        Padding="8,3"
                        Background="#CC111827"

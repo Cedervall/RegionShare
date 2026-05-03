@@ -3,9 +3,8 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="RegionShare Controls"
         Width="520"
-        Height="610"
         MinWidth="480"
-        MinHeight="610"
+        SizeToContent="Height"
         Background="#F8FAFC">
     <Window.Resources>
         <ControlTemplate x:Key="RoundedButtonTemplate" TargetType="Button">
@@ -147,6 +146,11 @@
             <Setter Property="BorderBrush" Value="#DC2626" />
         </Style>
 
+        <Style x:Key="WarningButtonStyle" TargetType="Button" BasedOn="{StaticResource PrimaryButtonStyle}">
+            <Setter Property="Background" Value="#D97706" />
+            <Setter Property="BorderBrush" Value="#D97706" />
+        </Style>
+
         <Style x:Key="SecondaryButtonStyle" TargetType="Button">
             <Setter Property="Template" Value="{StaticResource RoundedButtonTemplate}" />
             <Setter Property="Background" Value="#E9EEF6" />
@@ -270,24 +274,33 @@
 
                     <Grid Margin="0,0,0,16">
                         <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="1.4*" />
                             <ColumnDefinition Width="12" />
                             <ColumnDefinition Width="*" />
                         </Grid.ColumnDefinitions>
 
                         <Border Grid.Column="0" Style="{StaticResource CardBorderStyle}" Margin="0">
                             <StackPanel>
-                                <TextBlock Style="{StaticResource MutedTextStyle}" Text="Aspect Ratio" />
+                                <TextBlock Style="{StaticResource MutedTextStyle}" Text="Region Size" />
+                                <TextBlock Margin="0,10,0,0" Style="{StaticResource MutedTextStyle}" Text="Aspect Ratio" />
                                 <UniformGrid Margin="0,10,0,0" Columns="4">
                                     <Button x:Name="AspectFreeButton" Margin="0,0,4,0" Tag="Free" Click="AspectRatioButton_Click" Content="Free" />
                                     <Button x:Name="AspectSixteenByNineButton" Margin="0,0,4,0" Tag="SixteenByNine" Click="AspectRatioButton_Click" Content="16:9" />
                                     <Button x:Name="AspectSixteenByTenButton" Margin="0,0,4,0" Tag="SixteenByTen" Click="AspectRatioButton_Click" Content="16:10" />
                                     <Button x:Name="AspectFourByThreeButton" Tag="FourByThree" Click="AspectRatioButton_Click" Content="4:3" />
                                 </UniformGrid>
+                                <TextBlock Margin="0,12,0,0" Style="{StaticResource MutedTextStyle}" Text="Presets" />
+                                <UniformGrid x:Name="PresetButtonsPanel" Margin="0,10,0,0" Columns="1" />
                             </StackPanel>
                         </Border>
 
-                        <Border Grid.Column="2" Style="{StaticResource CardBorderStyle}" Margin="0">
+                        <Grid Grid.Column="2">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="*" />
+                            </Grid.RowDefinitions>
+
+                        <Border Grid.Row="0" Style="{StaticResource CardBorderStyle}">
                             <StackPanel>
                                 <TextBlock x:Name="CaptureFrameRateText" Style="{StaticResource MutedTextStyle}" Text="Capture FPS" />
                                 <ComboBox x:Name="CaptureFrameRateComboBox"
@@ -297,25 +310,7 @@
                                           SelectionChanged="CaptureFrameRateComboBox_SelectionChanged" />
                             </StackPanel>
                         </Border>
-                    </Grid>
-
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="12" />
-                            <ColumnDefinition Width="*" />
-                        </Grid.ColumnDefinitions>
-
-                        <Border Grid.Column="0" Style="{StaticResource CardBorderStyle}" Margin="0">
-                            <StackPanel>
-                                <TextBlock Style="{StaticResource MutedTextStyle}" Text="Presets" />
-                                <Button Margin="0,10,0,6" Tag="1280x720" Click="PresetButton_Click" Style="{StaticResource SecondaryButtonStyle}" Content="1280 x 720" />
-                                <Button Margin="0,0,0,6" Tag="1920x1080" Click="PresetButton_Click" Style="{StaticResource PrimaryButtonStyle}" Content="1920 x 1080" />
-                                <Button Tag="1600x900" Click="PresetButton_Click" Style="{StaticResource SecondaryButtonStyle}" Content="1600 x 900" />
-                            </StackPanel>
-                        </Border>
-
-                        <Border Grid.Column="2" Style="{StaticResource CardBorderStyle}" Margin="0">
+                        <Border Grid.Row="1" Style="{StaticResource CardBorderStyle}" Margin="0">
                             <StackPanel>
                                 <TextBlock Style="{StaticResource MutedTextStyle}" Text="Options" />
                                 <CheckBox x:Name="CursorCaptureCheckBox"
@@ -324,11 +319,22 @@
                                           Unchecked="CursorCaptureCheckBox_Changed"
                                           Content="Capture Cursor" />
                                 <CheckBox x:Name="BorderlessPreviewCheckBox"
+                                          Margin="0,0,0,8"
                                           Checked="BorderlessPreviewCheckBox_Changed"
                                           Unchecked="BorderlessPreviewCheckBox_Changed"
                                           Content="Borderless Preview" />
+                                <CheckBox x:Name="OverlayStatusCheckBox"
+                                          Margin="0,0,0,8"
+                                          Checked="OverlayStatusCheckBox_Changed"
+                                          Unchecked="OverlayStatusCheckBox_Changed"
+                                          Content="Show Overlay Status" />
+                                <CheckBox x:Name="OverlayLatencyCheckBox"
+                                          Checked="OverlayLatencyCheckBox_Changed"
+                                          Unchecked="OverlayLatencyCheckBox_Changed"
+                                          Content="Show Overlay Latency" />
                             </StackPanel>
                         </Border>
+                        </Grid>
                     </Grid>
 
         </StackPanel>

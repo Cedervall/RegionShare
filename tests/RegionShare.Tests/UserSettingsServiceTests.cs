@@ -32,7 +32,9 @@ public sealed class UserSettingsServiceTests
             IsLocked = true,
             AspectRatioMode = AspectRatioMode.SixteenByNine,
             IsPreviewBorderless = true,
-            CaptureFramesPerSecond = 120
+            CaptureFramesPerSecond = 120,
+            IsOverlayStatusVisible = false,
+            IsOverlayLatencyVisible = false
         };
 
         service.Save(settings);
@@ -76,6 +78,42 @@ public sealed class UserSettingsServiceTests
         Assert.Equal(UserSettings.Default.PreviewHeight, settings.PreviewHeight);
         Assert.Equal(UserSettings.Default.ControlWidth, settings.ControlWidth);
         Assert.Equal(AspectRatioMode.Free, settings.AspectRatioMode);
+    }
+
+    [Fact]
+    public void LoadTreatsMissingOverlayInfoVisibilityAsVisible()
+    {
+        var directory = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(directory);
+        var path = Path.Combine(directory, "settings.json");
+        var json = JsonSerializer.Serialize(new
+        {
+            UserSettings.Default.OverlayLeft,
+            UserSettings.Default.OverlayTop,
+            UserSettings.Default.OverlayWidth,
+            UserSettings.Default.OverlayHeight,
+            UserSettings.Default.IsOverlayVisible,
+            UserSettings.Default.IsLocked,
+            UserSettings.Default.AspectRatioMode,
+            UserSettings.Default.PreviewLeft,
+            UserSettings.Default.PreviewTop,
+            UserSettings.Default.PreviewWidth,
+            UserSettings.Default.PreviewHeight,
+            UserSettings.Default.IsPreviewBorderless,
+            UserSettings.Default.ControlLeft,
+            UserSettings.Default.ControlTop,
+            UserSettings.Default.ControlWidth,
+            UserSettings.Default.ControlHeight,
+            UserSettings.Default.IsCursorCaptureEnabled,
+            UserSettings.Default.CaptureFramesPerSecond
+        });
+        File.WriteAllText(path, json);
+        var service = new UserSettingsService(path);
+
+        var settings = service.Load();
+
+        Assert.True(settings.IsOverlayStatusVisible ?? true);
+        Assert.True(settings.IsOverlayLatencyVisible ?? true);
     }
 
     [Fact]

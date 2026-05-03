@@ -21,6 +21,10 @@ public partial class ControlWindow : Window
     private readonly ICaptureFrameRateSettings _captureFrameRateSettings;
     private RegionSetupWindow? _regionSetupWindow;
     private bool _restoreOverlayAfterRegionSetup;
+    private bool _isApplyingPreset;
+    private bool _isChangingAspectRatio;
+    private string? _selectedPresetKey;
+    private Rect _lastRegionBounds;
 
     public ControlWindow(IScreenCaptureService captureService, Func<CaptureRegion> regionProvider, IOverlayController overlayController, IPreviewWindowController previewWindowController, IPreviewBlackoutController previewBlackoutController, IGlobalHotkeyService hotkeyService, ICursorCaptureSettings cursorCaptureSettings, ICaptureFrameRateSettings captureFrameRateSettings)
     {
@@ -43,7 +47,10 @@ public partial class ControlWindow : Window
         UpdateCaptureFrameRateState();
         UpdateControlState();
         UpdateOverlayState();
+        UpdateOverlayDisplayOptionsState();
         UpdateAspectRatioState();
+        UpdatePresetButtons();
+        _lastRegionBounds = _overlayController.RegionBounds;
     }
 
     protected override void OnSourceInitialized(EventArgs e)
@@ -102,20 +109,26 @@ public partial class ControlWindow : Window
             return;
         }
 
-        var preset = tag switch
-        {
-            "1280x720" => PresetSize.Hd,
-            "1600x900" => PresetSize.HdPlus,
-            "1920x1080" => PresetSize.FullHd,
-            _ => null
-        };
+        var preset = PresetSize.FromKey(tag);
 
         if (preset is null)
         {
             return;
         }
 
-        _overlayController.ApplyPreset(preset);
+        _selectedPresetKey = preset.Key;
+        _isApplyingPreset = true;
+        try
+        {
+            _overlayController.ApplyPreset(preset);
+        }
+        finally
+        {
+            _isApplyingPreset = false;
+        }
+
+        _lastRegionBounds = _overlayController.RegionBounds;
+        UpdatePresetButtons();
     }
 
     private void CursorCaptureCheckBox_Changed(object sender, RoutedEventArgs e)
@@ -134,6 +147,18 @@ public partial class ControlWindow : Window
         UpdateControlState();
     }
 
+    private void OverlayStatusCheckBox_Changed(object sender, RoutedEventArgs e)
+    {
+        _overlayController.SetStatusVisibility(OverlayStatusCheckBox.IsChecked == true);
+        UpdateOverlayDisplayOptionsState();
+    }
+
+    private void OverlayLatencyCheckBox_Changed(object sender, RoutedEventArgs e)
+    {
+        _overlayController.SetLatencyVisibility(OverlayLatencyCheckBox.IsChecked == true);
+        UpdateOverlayDisplayOptionsState();
+    }
+
     private void CaptureFrameRateComboBox_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
     {
         if (CaptureFrameRateComboBox.SelectedItem is int framesPerSecond)
@@ -150,8 +175,19 @@ public partial class ControlWindow : Window
             return;
         }
 
-        _overlayController.SetAspectRatioMode(aspectRatioMode);
+        _selectedPresetKey = null;
+        _isChangingAspectRatio = true;
+        try
+        {
+            _overlayController.SetAspectRatioMode(aspectRatioMode);
+        }
+        finally
+        {
+            _isChangingAspectRatio = false;
+        }
+
         UpdateAspectRatioState();
+        UpdatePresetButtons();
     }
 
     private void FancyZonesSetupButton_Click(object sender, RoutedEventArgs e)
@@ -203,8 +239,19 @@ public partial class ControlWindow : Window
 
     private void OverlayController_OverlayStateChanged(object? sender, EventArgs e)
     {
+        var regionBoundsChanged = _overlayController.RegionBounds != _lastRegionBounds;
+        if (regionBoundsChanged && !_isApplyingPreset)
+        {
+            _selectedPresetKey = null;
+        }
+
+        _lastRegionBounds = _overlayController.RegionBounds;
         UpdateOverlayState();
         UpdateAspectRatioState();
+        if (!_isChangingAspectRatio)
+        {
+            UpdatePresetButtons();
+        }
     }
 
     private void PreviewWindowController_PreviewModeChanged(object? sender, EventArgs e)
@@ -234,7 +281,7 @@ public partial class ControlWindow : Window
 
         if (!_overlayController.TryApplyRegionBounds(_regionSetupWindow.GetConfiguredBounds()))
         {
-            OverlayStatusText.Text = "Unlock overlay before applying setup bounds.";
+            OverlayStatusText.Text = "Could not apply snap region.";
             return;
         }
 
@@ -245,6 +292,9 @@ public partial class ControlWindow : Window
 
         _regionSetupWindow.Close();
         UpdateOverlayState();
+        _lastRegionBounds = _overlayController.RegionBounds;
+        _selectedPresetKey = null;
+        UpdatePresetButtons();
     }
 
     private void RegionSetupWindow_Closed(object? sender, EventArgs e)
@@ -287,7 +337,14 @@ public partial class ControlWindow : Window
         OverlayVisibilityText.Text = controlState.VisibilityToggleText;
         OverlayLockIcon.Text = _overlayController.IsLocked ? "🔓" : "🔒";
         OverlayVisibilityIcon.Text = _overlayController.IsOverlayVisible ? "🙈" : "👁";
+        OverlayLockToggleButton.Style = (Style)FindResource(_overlayController.IsLocked ? "WarningButtonStyle" : "SecondaryButtonStyle");
         OverlayStatusText.Text = controlState.StatusText;
+    }
+
+    private void UpdateOverlayDisplayOptionsState()
+    {
+        OverlayStatusCheckBox.IsChecked = _overlayController.IsStatusVisible;
+        OverlayLatencyCheckBox.IsChecked = _overlayController.IsLatencyVisible;
     }
 
     private static Brush GetCaptureStatusBrush(bool isCapturing)
@@ -301,6 +358,23 @@ public partial class ControlWindow : Window
         SetAspectRatioButtonState(AspectSixteenByNineButton, AspectRatioMode.SixteenByNine);
         SetAspectRatioButtonState(AspectSixteenByTenButton, AspectRatioMode.SixteenByTen);
         SetAspectRatioButtonState(AspectFourByThreeButton, AspectRatioMode.FourByThree);
+    }
+
+    private void UpdatePresetButtons()
+    {
+        PresetButtonsPanel.Children.Clear();
+        foreach (var preset in PresetSize.ForAspectRatio(_overlayController.AspectRatioMode))
+        {
+            var button = new System.Windows.Controls.Button
+            {
+                Content = preset.Name,
+                Tag = preset.Key,
+                Margin = new Thickness(0, 0, 6, 6),
+                Style = (Style)FindResource(_selectedPresetKey == preset.Key ? "SelectedPillButtonStyle" : "PillButtonStyle")
+            };
+            button.Click += PresetButton_Click;
+            PresetButtonsPanel.Children.Add(button);
+        }
     }
 
     private void SetAspectRatioButtonState(System.Windows.Controls.Button button, AspectRatioMode aspectRatioMode)

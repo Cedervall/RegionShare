@@ -52,6 +52,8 @@ public partial class App : Application
         overlayWindow.Width = settings.OverlayWidth;
         overlayWindow.Height = settings.OverlayHeight;
         overlayWindow.SetAspectRatioMode(settings.AspectRatioMode);
+        overlayWindow.SetStatusVisibility(settings.IsOverlayStatusVisible ?? true);
+        overlayWindow.SetLatencyVisibility(settings.IsOverlayLatencyVisible ?? true);
         if (settings.IsLocked)
         {
             overlayWindow.ToggleLock();
@@ -66,7 +68,6 @@ public partial class App : Application
         controlWindow.Left = settings.ControlLeft;
         controlWindow.Top = settings.ControlTop;
         controlWindow.Width = settings.ControlWidth;
-        controlWindow.Height = settings.ControlHeight;
     }
 
     private static UserSettings CreateSettings(OverlayWindow overlayWindow, PreviewWindow previewWindow, ControlWindow controlWindow, IPreviewWindowController previewWindowController, ICursorCaptureSettings cursorCaptureSettings, ICaptureFrameRateSettings captureFrameRateSettings)
@@ -89,7 +90,9 @@ public partial class App : Application
             controlWindow.Width,
             controlWindow.Height,
             cursorCaptureSettings.IsCursorCaptureEnabled,
-            captureFrameRateSettings.FramesPerSecond);
+            captureFrameRateSettings.FramesPerSecond,
+            overlayWindow.IsStatusVisible,
+            overlayWindow.IsLatencyVisible);
     }
 }
 

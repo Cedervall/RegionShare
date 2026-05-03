@@ -14,13 +14,11 @@ public sealed class OverlayPresetCalculatorTests
     }
 
     [Fact]
-    public void ApplyKeepsCurrentSizeWhenLocked()
+    public void ApplyReturnsPresetSizeWhenLocked()
     {
-        var currentSize = new Size(640, 360);
+        var size = OverlayPresetCalculator.Apply(new Size(640, 360), PresetSize.Hd, new Size(320, 180), true);
 
-        var size = OverlayPresetCalculator.Apply(currentSize, PresetSize.Hd, new Size(320, 180), true);
-
-        Assert.Equal(currentSize, size);
+        Assert.Equal(new Size(1280, 720), size);
     }
 
     [Fact]

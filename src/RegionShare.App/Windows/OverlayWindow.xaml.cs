@@ -18,6 +18,8 @@ public partial class OverlayWindow : Window, IOverlayController
     private readonly IWindowCaptureExclusionService _captureExclusionService;
     private readonly IWindowClickThroughService _clickThroughService;
     private readonly IFrameTimingTelemetry _frameTimingTelemetry;
+    private bool _isStatusVisible = true;
+    private bool _isLatencyVisible = true;
 
     public OverlayWindow(IOverlayStateService overlayState, IDpiService dpiService, IWindowCaptureExclusionService captureExclusionService, IWindowClickThroughService clickThroughService, IFrameTimingTelemetry frameTimingTelemetry)
     {
@@ -38,6 +40,10 @@ public partial class OverlayWindow : Window, IOverlayController
     public bool IsLocked => _overlayState.IsLocked;
 
     public bool IsOverlayVisible => IsVisible;
+
+    public bool IsStatusVisible => _isStatusVisible;
+
+    public bool IsLatencyVisible => _isLatencyVisible;
 
     public AspectRatioMode AspectRatioMode => _overlayState.AspectRatioMode;
 
@@ -153,6 +159,7 @@ public partial class OverlayWindow : Window, IOverlayController
         Top = appliedBounds.Top;
         Width = appliedBounds.Width;
         Height = appliedBounds.Height;
+        _overlayState.AspectRatioMode = AspectRatioMode.Free;
         UpdateSizeText();
         OverlayStateChanged?.Invoke(this, EventArgs.Empty);
         return true;
@@ -161,6 +168,20 @@ public partial class OverlayWindow : Window, IOverlayController
     public void SetAspectRatioMode(AspectRatioMode aspectRatioMode)
     {
         _overlayState.AspectRatioMode = aspectRatioMode;
+        OverlayStateChanged?.Invoke(this, EventArgs.Empty);
+    }
+
+    public void SetStatusVisibility(bool isVisible)
+    {
+        _isStatusVisible = isVisible;
+        UpdateOverlayInfoVisibility();
+        OverlayStateChanged?.Invoke(this, EventArgs.Empty);
+    }
+
+    public void SetLatencyVisibility(bool isVisible)
+    {
+        _isLatencyVisible = isVisible;
+        UpdateOverlayInfoVisibility();
         OverlayStateChanged?.Invoke(this, EventArgs.Empty);
     }
 
@@ -174,12 +195,14 @@ public partial class OverlayWindow : Window, IOverlayController
         var handle = GetResizeHandle(thumb.Name);
         var bounds = new Rect(Left, Top, Width, Height);
         var minimumSize = new Size(MinWidth, MinHeight);
-        var resizedBounds = OverlayResizeCalculator.Resize(bounds, handle, e.HorizontalChange, e.VerticalChange, minimumSize, _overlayState.AspectRatioMode);
+        _overlayState.AspectRatioMode = AspectRatioMode.Free;
+        var resizedBounds = OverlayResizeCalculator.Resize(bounds, handle, e.HorizontalChange, e.VerticalChange, minimumSize, AspectRatioMode.Free);
 
         Left = resizedBounds.Left;
         Top = resizedBounds.Top;
         Width = resizedBounds.Width;
         Height = resizedBounds.Height;
+        OverlayStateChanged?.Invoke(this, EventArgs.Empty);
     }
 
     private void LockToggle_Click(object sender, RoutedEventArgs e)
@@ -213,12 +236,20 @@ public partial class OverlayWindow : Window, IOverlayController
         var visualState = OverlayLockVisualState.FromLockState(_overlayState.IsLocked);
 
         FrameBorder.BorderBrush = (Brush)new BrushConverter().ConvertFromString(visualState.BorderBrush)!;
-        LockToggleButton.Content = visualState.ToggleText;
         LockStatusText.Text = visualState.StatusText;
         LockContextMenuItem.Header = _overlayState.IsLocked ? "Unlock region" : "Lock region";
         SizeText.ToolTip = visualState.SizeToolTip;
         SetResizeHandlesEnabled(!_overlayState.IsLocked);
         _clickThroughService.SetClickThrough(this, _overlayState.IsLocked);
+        UpdateOverlayInfoVisibility();
+    }
+
+    private void UpdateOverlayInfoVisibility()
+    {
+        var statusVisibility = _isStatusVisible ? Visibility.Visible : Visibility.Collapsed;
+        SizeText.Visibility = statusVisibility;
+        LockStatusText.Visibility = statusVisibility;
+        FrameTimingText.Visibility = _isLatencyVisible ? Visibility.Visible : Visibility.Collapsed;
     }
 
     private void SetResizeHandlesEnabled(bool isEnabled)
