@@ -1,6 +1,7 @@
 namespace RegionShare.App.Capture;
 
 using System.Runtime.InteropServices;
+using System.Diagnostics;
 using System.Windows.Interop;
 using System.Windows.Media.Imaging;
 
@@ -104,7 +105,7 @@ public sealed class GdiScreenCaptureService : IScreenCaptureService, IDisposable
             IsCapturing,
             _region,
             region => CaptureFrame(region, captureBuffer),
-            frame => FrameCaptured?.Invoke(this, new CapturedFrameEventArgs(frame)),
+            frame => FrameCaptured?.Invoke(this, new CapturedFrameEventArgs(frame, Stopwatch.GetTimestamp())),
             Stop,
             exception => CaptureFailed?.Invoke(this, new CaptureFailedEventArgs(exception)));
     }

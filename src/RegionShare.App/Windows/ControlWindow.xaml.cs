@@ -1,6 +1,7 @@
 using System.ComponentModel;
 using System.Windows;
 using System.Windows.Interop;
+using System.Windows.Media;
 using RegionShare.App.Capture;
 using RegionShare.App.Hotkeys;
 using RegionShare.App.Overlay;
@@ -14,18 +15,20 @@ public partial class ControlWindow : Window
     private readonly PreviewCaptureController _captureController;
     private readonly IOverlayController _overlayController;
     private readonly IPreviewWindowController _previewWindowController;
+    private readonly IPreviewBlackoutController _previewBlackoutController;
     private readonly IGlobalHotkeyService _hotkeyService;
     private readonly ICursorCaptureSettings _cursorCaptureSettings;
     private readonly ICaptureFrameRateSettings _captureFrameRateSettings;
     private RegionSetupWindow? _regionSetupWindow;
     private bool _restoreOverlayAfterRegionSetup;
 
-    public ControlWindow(IScreenCaptureService captureService, Func<CaptureRegion> regionProvider, IOverlayController overlayController, IPreviewWindowController previewWindowController, IGlobalHotkeyService hotkeyService, ICursorCaptureSettings cursorCaptureSettings, ICaptureFrameRateSettings captureFrameRateSettings)
+    public ControlWindow(IScreenCaptureService captureService, Func<CaptureRegion> regionProvider, IOverlayController overlayController, IPreviewWindowController previewWindowController, IPreviewBlackoutController previewBlackoutController, IGlobalHotkeyService hotkeyService, ICursorCaptureSettings cursorCaptureSettings, ICaptureFrameRateSettings captureFrameRateSettings)
     {
         _captureService = captureService;
         _captureController = new PreviewCaptureController(captureService, regionProvider);
         _overlayController = overlayController;
         _previewWindowController = previewWindowController;
+        _previewBlackoutController = previewBlackoutController;
         _hotkeyService = hotkeyService;
         _cursorCaptureSettings = cursorCaptureSettings;
         _captureFrameRateSettings = captureFrameRateSettings;
@@ -34,14 +37,13 @@ public partial class ControlWindow : Window
         _previewWindowController.PreviewModeChanged += PreviewWindowController_PreviewModeChanged;
 
         InitializeComponent();
-        AspectRatioComboBox.ItemsSource = Enum.GetValues<AspectRatioMode>();
-        AspectRatioComboBox.SelectedItem = _overlayController.AspectRatioMode;
         CaptureFrameRateComboBox.ItemsSource = CaptureFrameRateCalculator.SupportedFramesPerSecond;
         CaptureFrameRateComboBox.SelectedItem = CaptureFrameRateCalculator.Sanitize(_captureFrameRateSettings.FramesPerSecond);
         UpdateCursorCaptureState();
         UpdateCaptureFrameRateState();
         UpdateControlState();
         UpdateOverlayState();
+        UpdateAspectRatioState();
     }
 
     protected override void OnSourceInitialized(EventArgs e)
@@ -63,7 +65,13 @@ public partial class ControlWindow : Window
 
     private void CaptureToggleButton_Click(object sender, RoutedEventArgs e)
     {
+        var wasCapturing = _captureService.IsCapturing;
         _captureController.Toggle();
+        if (wasCapturing && !_captureService.IsCapturing)
+        {
+            _previewBlackoutController.RequestBlackout();
+        }
+
         UpdateControlState();
     }
 
@@ -85,16 +93,6 @@ public partial class ControlWindow : Window
         }
 
         UpdateOverlayState();
-    }
-
-    private void PreviewModeToggleButton_Click(object sender, RoutedEventArgs e)
-    {
-        var nextMode = _previewWindowController.Mode == PreviewWindowMode.Borderless
-            ? PreviewWindowMode.Normal
-            : PreviewWindowMode.Borderless;
-
-        _previewWindowController.SetMode(nextMode);
-        UpdateControlState();
     }
 
     private void PresetButton_Click(object sender, RoutedEventArgs e)
@@ -120,18 +118,20 @@ public partial class ControlWindow : Window
         _overlayController.ApplyPreset(preset);
     }
 
-    private void AspectRatioComboBox_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
-    {
-        if (AspectRatioComboBox.SelectedItem is AspectRatioMode aspectRatioMode)
-        {
-            _overlayController.SetAspectRatioMode(aspectRatioMode);
-        }
-    }
-
     private void CursorCaptureCheckBox_Changed(object sender, RoutedEventArgs e)
     {
         var state = CursorCaptureToggleController.Apply(CursorCaptureCheckBox.IsChecked == true, _cursorCaptureSettings);
         ApplyCursorCaptureState(state);
+    }
+
+    private void BorderlessPreviewCheckBox_Changed(object sender, RoutedEventArgs e)
+    {
+        var nextMode = BorderlessPreviewCheckBox.IsChecked == true
+            ? PreviewWindowMode.Borderless
+            : PreviewWindowMode.Normal;
+
+        _previewWindowController.SetMode(nextMode);
+        UpdateControlState();
     }
 
     private void CaptureFrameRateComboBox_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
@@ -141,6 +141,17 @@ public partial class ControlWindow : Window
             var state = CaptureFrameRateToggleController.Apply(framesPerSecond, _captureFrameRateSettings);
             ApplyCaptureFrameRateState(state);
         }
+    }
+
+    private void AspectRatioButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is not FrameworkElement { Tag: string tag } || !Enum.TryParse<AspectRatioMode>(tag, out var aspectRatioMode))
+        {
+            return;
+        }
+
+        _overlayController.SetAspectRatioMode(aspectRatioMode);
+        UpdateAspectRatioState();
     }
 
     private void FancyZonesSetupButton_Click(object sender, RoutedEventArgs e)
@@ -193,7 +204,7 @@ public partial class ControlWindow : Window
     private void OverlayController_OverlayStateChanged(object? sender, EventArgs e)
     {
         UpdateOverlayState();
-        AspectRatioComboBox.SelectedItem = _overlayController.AspectRatioMode;
+        UpdateAspectRatioState();
     }
 
     private void PreviewWindowController_PreviewModeChanged(object? sender, EventArgs e)
@@ -210,6 +221,7 @@ public partial class ControlWindow : Window
         }
 
         CaptureErrorText.Text = "Capture stopped: " + e.Exception.Message;
+        _previewBlackoutController.RequestBlackout();
         UpdateControlState();
     }
 
@@ -256,8 +268,11 @@ public partial class ControlWindow : Window
     {
         var state = ControlWindowState.FromState(_captureService.IsCapturing, _previewWindowController.Mode);
         CaptureToggleButton.Content = state.CaptureToggleText;
+        CaptureToggleButton.Style = (Style)FindResource(_captureService.IsCapturing ? "DangerButtonStyle" : "PrimaryButtonStyle");
         CaptureStatusText.Text = state.CaptureStatusText;
-        PreviewModeToggleButton.Content = state.BorderlessToggleText;
+        CaptureStatusDot.Foreground = GetCaptureStatusBrush(_captureService.IsCapturing);
+        CaptureStatusText.Foreground = GetCaptureStatusBrush(_captureService.IsCapturing);
+        BorderlessPreviewCheckBox.IsChecked = _previewWindowController.Mode == PreviewWindowMode.Borderless;
         if (_captureService.IsCapturing)
         {
             CaptureErrorText.Text = string.Empty;
@@ -268,9 +283,29 @@ public partial class ControlWindow : Window
     {
         var controlState = PreviewOverlayControlState.FromOverlayState(_overlayController.IsLocked, _overlayController.IsOverlayVisible);
 
-        OverlayLockToggleButton.Content = controlState.LockToggleText;
-        OverlayVisibilityToggleButton.Content = controlState.VisibilityToggleText;
+        OverlayLockText.Text = controlState.LockToggleText;
+        OverlayVisibilityText.Text = controlState.VisibilityToggleText;
+        OverlayLockIcon.Text = _overlayController.IsLocked ? "🔓" : "🔒";
+        OverlayVisibilityIcon.Text = _overlayController.IsOverlayVisible ? "🙈" : "👁";
         OverlayStatusText.Text = controlState.StatusText;
+    }
+
+    private static Brush GetCaptureStatusBrush(bool isCapturing)
+    {
+        return (Brush)new BrushConverter().ConvertFromString(isCapturing ? "#DC2626" : "#64748B")!;
+    }
+
+    private void UpdateAspectRatioState()
+    {
+        SetAspectRatioButtonState(AspectFreeButton, AspectRatioMode.Free);
+        SetAspectRatioButtonState(AspectSixteenByNineButton, AspectRatioMode.SixteenByNine);
+        SetAspectRatioButtonState(AspectSixteenByTenButton, AspectRatioMode.SixteenByTen);
+        SetAspectRatioButtonState(AspectFourByThreeButton, AspectRatioMode.FourByThree);
+    }
+
+    private void SetAspectRatioButtonState(System.Windows.Controls.Button button, AspectRatioMode aspectRatioMode)
+    {
+        button.Style = (Style)FindResource(_overlayController.AspectRatioMode == aspectRatioMode ? "SelectedPillButtonStyle" : "PillButtonStyle");
     }
 
     private void UpdateCursorCaptureState()
@@ -288,12 +323,12 @@ public partial class ControlWindow : Window
     private void ApplyCursorCaptureState(CursorCaptureControlState state)
     {
         CursorCaptureCheckBox.IsChecked = state.IsChecked;
-        CursorCaptureCheckBox.Content = state.Label;
+        CursorCaptureCheckBox.Content = "Capture Cursor";
     }
 
     private void ApplyCaptureFrameRateState(CaptureFrameRateControlState state)
     {
         CaptureFrameRateComboBox.SelectedItem = state.FramesPerSecond;
-        CaptureFrameRateText.Text = state.Label;
+        CaptureFrameRateText.Text = "Capture FPS";
     }
 }

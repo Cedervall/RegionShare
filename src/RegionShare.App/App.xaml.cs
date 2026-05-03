@@ -30,9 +30,11 @@ public partial class App : Application
         var captureService = ScreenCaptureServiceFactory.Create(cursorCaptureSettings, captureFrameRateSettings, new Direct3DDesktopDuplicationSupport());
         var hotkeyService = new GlobalHotkeyService();
         var previewWindowController = new PreviewWindowController();
-        var overlayWindow = new OverlayWindow(overlayState, new DpiService(), new WindowCaptureExclusionService(), new WindowClickThroughService());
-        var previewWindow = new PreviewWindow(captureService, overlayWindow.GetCaptureRegion, previewWindowController);
-        var controlWindow = new ControlWindow(captureService, overlayWindow.GetCaptureRegion, overlayWindow, previewWindowController, hotkeyService, cursorCaptureSettings, captureFrameRateSettings);
+        var previewBlackoutController = new PreviewBlackoutController();
+        var frameTimingTelemetry = new FrameTimingTelemetry();
+        var overlayWindow = new OverlayWindow(overlayState, new DpiService(), new WindowCaptureExclusionService(), new WindowClickThroughService(), frameTimingTelemetry);
+        var previewWindow = new PreviewWindow(captureService, overlayWindow.GetCaptureRegion, previewWindowController, frameTimingTelemetry, previewBlackoutController);
+        var controlWindow = new ControlWindow(captureService, overlayWindow.GetCaptureRegion, overlayWindow, previewWindowController, previewBlackoutController, hotkeyService, cursorCaptureSettings, captureFrameRateSettings);
 
         ApplySettings(settings, overlayWindow, previewWindow, controlWindow, previewWindowController);
 
@@ -41,11 +43,6 @@ public partial class App : Application
         overlayWindow.Show();
         previewWindow.Show();
         controlWindow.Show();
-
-        if (!settings.IsOverlayVisible)
-        {
-            overlayWindow.HideOverlay();
-        }
     }
 
     private static void ApplySettings(UserSettings settings, OverlayWindow overlayWindow, PreviewWindow previewWindow, ControlWindow controlWindow, IPreviewWindowController previewWindowController)

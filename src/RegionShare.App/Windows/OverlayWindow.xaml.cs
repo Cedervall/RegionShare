@@ -6,6 +6,7 @@ using System.ComponentModel;
 using RegionShare.App.Capture;
 using RegionShare.App.Dpi;
 using RegionShare.App.Overlay;
+using RegionShare.App.Preview;
 using RegionShare.App.Windowing;
 
 namespace RegionShare.App.Windows;
@@ -16,14 +17,18 @@ public partial class OverlayWindow : Window, IOverlayController
     private readonly IDpiService _dpiService;
     private readonly IWindowCaptureExclusionService _captureExclusionService;
     private readonly IWindowClickThroughService _clickThroughService;
+    private readonly IFrameTimingTelemetry _frameTimingTelemetry;
 
-    public OverlayWindow(IOverlayStateService overlayState, IDpiService dpiService, IWindowCaptureExclusionService captureExclusionService, IWindowClickThroughService clickThroughService)
+    public OverlayWindow(IOverlayStateService overlayState, IDpiService dpiService, IWindowCaptureExclusionService captureExclusionService, IWindowClickThroughService clickThroughService, IFrameTimingTelemetry frameTimingTelemetry)
     {
         _overlayState = overlayState;
         _dpiService = dpiService;
         _captureExclusionService = captureExclusionService;
         _clickThroughService = clickThroughService;
+        _frameTimingTelemetry = frameTimingTelemetry;
         InitializeComponent();
+        FrameTimingText.Text = FrameTimingLabelFormatter.Format(_frameTimingTelemetry.Current);
+        _frameTimingTelemetry.TimingUpdated += FrameTimingTelemetry_TimingUpdated;
         UpdateSizeText();
         UpdateLockVisualState();
     }
@@ -42,6 +47,7 @@ public partial class OverlayWindow : Window, IOverlayController
     {
         base.OnSourceInitialized(e);
         _captureExclusionService.ExcludeFromCapture(this);
+        _clickThroughService.SetClickThrough(this, _overlayState.IsLocked);
     }
 
     protected override void OnMouseLeftButtonDown(MouseButtonEventArgs e)
@@ -72,6 +78,12 @@ public partial class OverlayWindow : Window, IOverlayController
 
         e.Cancel = true;
         HideOverlay();
+    }
+
+    protected override void OnClosed(EventArgs e)
+    {
+        _frameTimingTelemetry.TimingUpdated -= FrameTimingTelemetry_TimingUpdated;
+        base.OnClosed(e);
     }
 
     public CaptureRegion GetCaptureRegion()
@@ -173,6 +185,17 @@ public partial class OverlayWindow : Window, IOverlayController
     private void LockToggle_Click(object sender, RoutedEventArgs e)
     {
         ToggleLock();
+    }
+
+    private void FrameTimingTelemetry_TimingUpdated(object? sender, FrameTimingSample e)
+    {
+        if (!Dispatcher.CheckAccess())
+        {
+            Dispatcher.BeginInvoke(() => FrameTimingTelemetry_TimingUpdated(sender, e));
+            return;
+        }
+
+        FrameTimingText.Text = FrameTimingLabelFormatter.Format(e);
     }
 
     private void UpdateSizeText()

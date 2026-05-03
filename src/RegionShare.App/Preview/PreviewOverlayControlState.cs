@@ -5,8 +5,8 @@ public sealed record PreviewOverlayControlState(string LockToggleText, string Vi
     public static PreviewOverlayControlState FromOverlayState(bool isLocked, bool isVisible)
     {
         return new PreviewOverlayControlState(
-            isLocked ? "Unlock overlay" : "Lock overlay",
-            isVisible ? "Hide overlay" : "Show overlay",
-            $"Overlay {(isLocked ? "locked" : "unlocked")}, {(isVisible ? "visible" : "hidden")}");
+            isLocked ? "Unlock Overlay" : "Lock Overlay",
+            isVisible ? "Hide Overlay" : "Show Overlay",
+            $"Overlay: {(isLocked ? "Locked" : "Unlocked")} & {(isVisible ? "Visible" : "Hidden")}");
     }
 }

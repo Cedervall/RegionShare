@@ -6,11 +6,13 @@ namespace RegionShare.Tests;
 public sealed class RegionSetupBoundsCalculatorTests
 {
     [Fact]
-    public void ApplyReturnsEmptyWhenOverlayIsLocked()
+    public void ApplyKeepsValidBoundsWhenOverlayIsLocked()
     {
-        var bounds = RegionSetupBoundsCalculator.Apply(new Rect(10, 20, 640, 360), new Size(320, 180), true);
+        var requestedBounds = new Rect(10, 20, 640, 360);
 
-        Assert.True(bounds.IsEmpty);
+        var bounds = RegionSetupBoundsCalculator.Apply(requestedBounds, new Size(320, 180), true);
+
+        Assert.Equal(requestedBounds, bounds);
     }
 
     [Fact]

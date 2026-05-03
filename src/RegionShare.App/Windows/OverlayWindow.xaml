@@ -71,6 +71,14 @@
                        Foreground="White"
                        FontWeight="SemiBold"
                        Text="Unlocked" />
+            <TextBlock x:Name="FrameTimingText"
+                       Margin="8,0,0,0"
+                       VerticalAlignment="Center"
+                       Padding="8,3"
+                       Background="#CC111827"
+                       Foreground="White"
+                       FontWeight="SemiBold"
+                       Text="Latency -- ms | Frame -- ms" />
         </StackPanel>
 
         <primitives:Thumb x:Name="TopLeftResizeHandle"

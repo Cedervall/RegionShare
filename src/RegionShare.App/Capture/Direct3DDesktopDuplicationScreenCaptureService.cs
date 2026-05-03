@@ -1,6 +1,7 @@
 namespace RegionShare.App.Capture;
 
 using System.Runtime.InteropServices;
+using System.Diagnostics;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using SharpGen.Runtime;
@@ -83,7 +84,7 @@ public sealed class Direct3DDesktopDuplicationScreenCaptureService : IScreenCapt
                 var frame = session.TryCaptureFrame();
                 if (frame is not null)
                 {
-                    FrameCaptured?.Invoke(this, new CapturedFrameEventArgs(frame));
+                    FrameCaptured?.Invoke(this, new CapturedFrameEventArgs(frame, Stopwatch.GetTimestamp()));
                 }
             }
         }

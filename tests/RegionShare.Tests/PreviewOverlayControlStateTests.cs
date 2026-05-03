@@ -5,10 +5,10 @@ namespace RegionShare.Tests;
 public sealed class PreviewOverlayControlStateTests
 {
     [Theory]
-    [InlineData(false, true, "Lock overlay", "Hide overlay", "Overlay unlocked, visible")]
-    [InlineData(true, true, "Unlock overlay", "Hide overlay", "Overlay locked, visible")]
-    [InlineData(false, false, "Lock overlay", "Show overlay", "Overlay unlocked, hidden")]
-    [InlineData(true, false, "Unlock overlay", "Show overlay", "Overlay locked, hidden")]
+    [InlineData(false, true, "Lock Overlay", "Hide Overlay", "Overlay: Unlocked & Visible")]
+    [InlineData(true, true, "Unlock Overlay", "Hide Overlay", "Overlay: Locked & Visible")]
+    [InlineData(false, false, "Lock Overlay", "Show Overlay", "Overlay: Unlocked & Hidden")]
+    [InlineData(true, false, "Unlock Overlay", "Show Overlay", "Overlay: Locked & Hidden")]
     public void FromOverlayStateReturnsPreviewControlLabels(bool isLocked, bool isVisible, string lockText, string visibilityText, string statusText)
     {
         var state = PreviewOverlayControlState.FromOverlayState(isLocked, isVisible);

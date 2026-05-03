@@ -2,6 +2,7 @@ using System.Windows;
 using RegionShare.App.Capture;
 using RegionShare.App.Preview;
 using System.Windows.Media.Imaging;
+using System.Diagnostics;
 
 namespace RegionShare.App.Windows;
 
@@ -9,16 +10,22 @@ public partial class PreviewWindow : Window
 {
     private readonly IScreenCaptureService _captureService;
     private readonly IPreviewWindowController _previewWindowController;
+    private readonly IPreviewBlackoutController _previewBlackoutController;
     private readonly Func<CaptureRegion> _regionProvider;
-    private readonly LatestFrameDeliveryState<BitmapSource> _latestFrameDelivery = new();
+    private readonly IFrameTimingTelemetry _frameTimingTelemetry;
+    private readonly LatestFrameDeliveryState<CapturedFrameEventArgs> _latestFrameDelivery = new();
+    private long? _previousPresentedTimestamp;
 
-    public PreviewWindow(IScreenCaptureService captureService, Func<CaptureRegion> regionProvider, IPreviewWindowController previewWindowController)
+    public PreviewWindow(IScreenCaptureService captureService, Func<CaptureRegion> regionProvider, IPreviewWindowController previewWindowController, IFrameTimingTelemetry frameTimingTelemetry, IPreviewBlackoutController previewBlackoutController)
     {
         _captureService = captureService;
         _previewWindowController = previewWindowController;
+        _previewBlackoutController = previewBlackoutController;
         _regionProvider = regionProvider;
+        _frameTimingTelemetry = frameTimingTelemetry;
         captureService.FrameCaptured += CaptureService_FrameCaptured;
         previewWindowController.PreviewModeChanged += PreviewWindowController_PreviewModeChanged;
+        previewBlackoutController.BlackoutRequested += PreviewBlackoutController_BlackoutRequested;
         InitializeComponent();
         UpdatePreviewMode();
         UpdatePreviewLayout();
@@ -33,6 +40,7 @@ public partial class PreviewWindow : Window
     {
         _captureService.FrameCaptured -= CaptureService_FrameCaptured;
         _previewWindowController.PreviewModeChanged -= PreviewWindowController_PreviewModeChanged;
+        _previewBlackoutController.BlackoutRequested -= PreviewBlackoutController_BlackoutRequested;
         if (_captureService is IDisposable disposableCaptureService)
         {
             disposableCaptureService.Dispose();
@@ -44,9 +52,14 @@ public partial class PreviewWindow : Window
 
     private void CaptureService_FrameCaptured(object? sender, CapturedFrameEventArgs e)
     {
+        if (!_captureService.IsCapturing)
+        {
+            return;
+        }
+
         if (!Dispatcher.CheckAccess())
         {
-            if (_latestFrameDelivery.Enqueue(e.Frame))
+            if (_latestFrameDelivery.Enqueue(e))
             {
                 Dispatcher.BeginInvoke(ProcessLatestFrame);
             }
@@ -54,15 +67,26 @@ public partial class PreviewWindow : Window
             return;
         }
 
-        ApplyFrame(e.Frame);
+        ApplyFrame(e);
+    }
+
+    private void PreviewBlackoutController_BlackoutRequested(object? sender, EventArgs e)
+    {
+        if (!Dispatcher.CheckAccess())
+        {
+            Dispatcher.BeginInvoke(() => PreviewBlackoutController_BlackoutRequested(sender, e));
+            return;
+        }
+
+        ApplyBlackout();
     }
 
     private void ProcessLatestFrame()
     {
-        var frame = _latestFrameDelivery.TakeLatest();
-        if (frame is not null)
+        var frameEvent = _latestFrameDelivery.TakeLatest();
+        if (frameEvent is not null)
         {
-            ApplyFrame(frame);
+            ApplyFrame(frameEvent);
         }
 
         if (_latestFrameDelivery.CompleteDispatchAndShouldQueueAgain())
@@ -71,10 +95,32 @@ public partial class PreviewWindow : Window
         }
     }
 
-    private void ApplyFrame(BitmapSource frame)
+    private void ApplyFrame(CapturedFrameEventArgs frameEvent)
     {
-        PreviewImage.Source = frame;
+        if (!_captureService.IsCapturing)
+        {
+            return;
+        }
+
+        PreviewImage.Source = frameEvent.Frame;
         CapturePlaceholderText.Visibility = PreviewPlaceholderState.GetPlaceholderVisibility(true);
+        UpdateFrameTiming(frameEvent.CapturedTimestamp);
+    }
+
+    private void ApplyBlackout()
+    {
+        var state = PreviewBlackoutState.Blackout;
+        PreviewImage.Source = (BitmapSource?)state.PreviewSource;
+        CapturePlaceholderText.Visibility = state.PlaceholderVisibility;
+        _previousPresentedTimestamp = null;
+    }
+
+    private void UpdateFrameTiming(long capturedTimestamp)
+    {
+        var presentedTimestamp = Stopwatch.GetTimestamp();
+        var sample = FrameTimingCalculator.Calculate(capturedTimestamp, presentedTimestamp, _previousPresentedTimestamp, Stopwatch.Frequency);
+        _previousPresentedTimestamp = presentedTimestamp;
+        _frameTimingTelemetry.Update(sample);
     }
 
     private void PreviewWindowController_PreviewModeChanged(object? sender, EventArgs e)

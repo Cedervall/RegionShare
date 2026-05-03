@@ -5,8 +5,8 @@ public sealed record ControlWindowState(string CaptureToggleText, string Capture
     public static ControlWindowState FromState(bool isCapturing, PreviewWindowMode previewMode)
     {
         return new ControlWindowState(
-            isCapturing ? "Stop capture" : "Start capture",
-            isCapturing ? "Capturing" : "Stopped",
+            isCapturing ? "Stop Capture" : "Start Capture",
+            isCapturing ? "Status: Capturing" : "Status: Stopped",
             previewMode == PreviewWindowMode.Borderless ? "Use normal preview" : "Use borderless preview");
     }
 }
