@@ -318,6 +318,14 @@
                                           Checked="CursorCaptureCheckBox_Changed"
                                           Unchecked="CursorCaptureCheckBox_Changed"
                                           Content="Capture Cursor" />
+                                <TextBlock x:Name="CursorCaptureRestartText"
+                                           Margin="24,-4,0,8"
+                                           Foreground="#D97706"
+                                           FontSize="12"
+                                           FontWeight="SemiBold"
+                                           Text="Restart capture to apply cursor capture changes."
+                                           TextWrapping="Wrap"
+                                           Visibility="Collapsed" />
                                 <CheckBox x:Name="BorderlessPreviewCheckBox"
                                           Margin="0,0,0,8"
                                           Checked="BorderlessPreviewCheckBox_Changed"

@@ -20,18 +20,18 @@ $innoScript = Join-Path $repoRoot "installer\RegionShare.iss"
 if ([string]::IsNullOrWhiteSpace($Version)) {
     $tag = (& git -C $repoRoot describe --tags --exact-match 2>$null)
     if ($LASTEXITCODE -ne 0 -or [string]::IsNullOrWhiteSpace($tag)) {
-        throw "No exact git tag found. Create a version tag like 'v0.1.0' or pass -Version 0.1.0."
+        throw "No exact git tag found. Create a version tag like 'v0.1.2' or pass -Version 0.1.2."
     }
 
     if ($tag -notmatch '^v(?<version>\d+\.\d+\.\d+)$') {
-        throw "Git tag '$tag' must match vMAJOR.MINOR.PATCH, for example v0.1.0."
+        throw "Git tag '$tag' must match vMAJOR.MINOR.PATCH, for example v0.1.2."
     }
 
     $Version = $Matches.version
 }
 
 if ($Version -notmatch '^\d+\.\d+\.\d+$') {
-    throw "Version '$Version' must match MAJOR.MINOR.PATCH, for example 0.1.0."
+    throw "Version '$Version' must match MAJOR.MINOR.PATCH, for example 0.1.2."
 }
 
 if ((Test-Path $iconPng) -and !(Test-Path $iconIco)) {

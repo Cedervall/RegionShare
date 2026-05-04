@@ -1,23 +1,29 @@
 # Capture Exclusion
 
-The overlay uses `SetWindowDisplayAffinity` with `WDA_EXCLUDEFROMCAPTURE` to request that Windows excludes the selector window from screen capture.
+The Capture Window uses `SetWindowDisplayAffinity` with `WDA_EXCLUDEFROMCAPTURE` to request that Windows excludes the selector window from screen capture.
 
-## Current Backend
-The current MVP capture backend is `GdiScreenCaptureService`, which captures the selected screen rectangle locally using GDI `BitBlt`.
+## Current Backends
 
-Windows display-affinity support can vary by OS version, capture API, graphics driver, and capture path. The app treats overlay exclusion as a required behavior, but it must be manually validated on the target machine with the active capture backend.
+The default backend is `Direct3DDesktopDuplicationScreenCaptureService` when supported and cursor capture is disabled.
+
+`GdiScreenCaptureService` is used as fallback and when cursor capture is enabled.
+
+Windows display-affinity support can vary by OS version, capture API, graphics driver, and capture path. The app treats Capture Window exclusion as required behavior, but it must be manually validated on the target machine with the active backend.
 
 ## Expected Result
-- The overlay border, size label, lock controls, and resize handles must not appear in the preview image.
-- The preview should show the desktop and windows underneath the selected region.
+
+- The capture border, status labels, latency label, and resize handles must not appear in the Region Share Window.
+- The Region Share Window should show the desktop and windows underneath the selected region.
 - Capture remains local-only and does not transmit or persist screen contents.
 
 ## Manual Validation
-1. Run the app.
-2. Place the overlay over visible desktop/application content.
-3. Click `Start capture` in the preview window.
-4. Confirm the preview does not contain the overlay border, controls, or label.
-5. Lock the overlay and confirm the preview still excludes the overlay.
-6. Hide/show the overlay and confirm capture continues from the selected region.
 
-If the overlay appears in the preview, prioritize replacing the interim GDI backend with Windows Graphics Capture or another capture path that reliably honors exclusion.
+1. Run the app.
+2. Place the Capture Window over visible desktop/application content.
+3. Click `Start Capture` in the Control Window.
+4. Confirm the Region Share Window does not contain the Capture Window border, controls, or labels.
+5. Lock the Capture Window and confirm the Region Share Window still excludes it.
+6. Hide/show the Capture Window and confirm capture continues from the selected region.
+7. Enable cursor capture, restart capture when prompted, and repeat the exclusion check with the GDI backend.
+
+If the Capture Window appears in the Region Share Window, treat it as a release-blocking bug for the active backend.

@@ -27,7 +27,7 @@ public partial class App : Application
         {
             FramesPerSecond = settings.CaptureFramesPerSecond
         };
-        var captureService = ScreenCaptureServiceFactory.Create(cursorCaptureSettings, captureFrameRateSettings, new Direct3DDesktopDuplicationSupport());
+        var captureService = new CaptureServiceManager(cursorCaptureSettings, captureFrameRateSettings, new Direct3DDesktopDuplicationSupport());
         var hotkeyService = new GlobalHotkeyService();
         var previewWindowController = new PreviewWindowController();
         var previewBlackoutController = new PreviewBlackoutController();

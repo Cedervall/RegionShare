@@ -25,6 +25,7 @@ public partial class ControlWindow : Window
     private bool _isChangingAspectRatio;
     private string? _selectedPresetKey;
     private Rect _lastRegionBounds;
+    private bool _isCursorCaptureRestartRequired;
 
     public ControlWindow(IScreenCaptureService captureService, Func<CaptureRegion> regionProvider, IOverlayController overlayController, IPreviewWindowController previewWindowController, IPreviewBlackoutController previewBlackoutController, IGlobalHotkeyService hotkeyService, ICursorCaptureSettings cursorCaptureSettings, ICaptureFrameRateSettings captureFrameRateSettings)
     {
@@ -77,6 +78,10 @@ public partial class ControlWindow : Window
         if (wasCapturing && !_captureService.IsCapturing)
         {
             _previewBlackoutController.RequestBlackout();
+        }
+        else if (!wasCapturing && _captureService.IsCapturing)
+        {
+            _isCursorCaptureRestartRequired = false;
         }
 
         UpdateControlState();
@@ -133,8 +138,11 @@ public partial class ControlWindow : Window
 
     private void CursorCaptureCheckBox_Changed(object sender, RoutedEventArgs e)
     {
+        var wasCapturing = _captureService.IsCapturing;
         var state = CursorCaptureToggleController.Apply(CursorCaptureCheckBox.IsChecked == true, _cursorCaptureSettings);
         ApplyCursorCaptureState(state);
+        _isCursorCaptureRestartRequired = wasCapturing;
+        UpdateCursorCaptureRestartState();
     }
 
     private void BorderlessPreviewCheckBox_Changed(object sender, RoutedEventArgs e)
@@ -327,6 +335,8 @@ public partial class ControlWindow : Window
         {
             CaptureErrorText.Text = string.Empty;
         }
+
+        UpdateCursorCaptureRestartState();
     }
 
     private void UpdateOverlayState()
@@ -398,6 +408,11 @@ public partial class ControlWindow : Window
     {
         CursorCaptureCheckBox.IsChecked = state.IsChecked;
         CursorCaptureCheckBox.Content = "Capture Cursor";
+    }
+
+    private void UpdateCursorCaptureRestartState()
+    {
+        CursorCaptureRestartText.Visibility = _isCursorCaptureRestartRequired ? Visibility.Visible : Visibility.Collapsed;
     }
 
     private void ApplyCaptureFrameRateState(CaptureFrameRateControlState state)

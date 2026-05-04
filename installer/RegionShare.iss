@@ -2,7 +2,7 @@
 #define MyAppPublisher "RegionShare"
 #define MyAppExeName "RegionShare.exe"
 #ifndef MyAppVersion
-#define MyAppVersion "0.1.1"
+#define MyAppVersion "0.1.2"
 #endif
 #ifndef PublishDir
 #define PublishDir "..\artifacts\publish\RegionShare"
@@ -35,7 +35,7 @@ Name: "english"; MessagesFile: "compiler:Default.isl"
 Name: "desktopicon"; Description: "Create a desktop shortcut"; GroupDescription: "Additional shortcuts:"; Flags: unchecked
 
 [Files]
-Source: "{#PublishDir}\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "{#PublishDir}\*"; DestDir: "{app}"; Excludes: "*.pdb"; Flags: ignoreversion recursesubdirs createallsubdirs
 
 [Icons]
 Name: "{autoprograms}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"
