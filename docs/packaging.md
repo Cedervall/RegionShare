@@ -54,12 +54,32 @@ The script:
 - builds a single-file app executable
 - invokes Inno Setup
 - writes the installer to `artifacts\installer`
+- writes a SHA-256 checksum file next to the installer
 
 Expected installer output for version `0.1.2`:
 
 ```text
 artifacts\installer\RegionShareSetup-0.1.2.exe
+artifacts\installer\RegionShareSetup-0.1.2.exe.sha256
 ```
+
+## Verify Installer Integrity
+
+Each installer build writes a `.sha256` file next to the installer. The checksum verifies that a downloaded installer matches the file produced during packaging.
+
+On Windows, users can calculate the installer hash with:
+
+```powershell
+Get-FileHash ".\RegionShareSetup-0.1.2.exe" -Algorithm SHA256
+```
+
+Compare the output hash to:
+
+```text
+RegionShareSetup-0.1.2.exe.sha256
+```
+
+Checksum verification confirms file integrity. It does not replace code signing or prove publisher identity.
 
 ## Publish Without Installer
 
@@ -100,4 +120,5 @@ Unsigned installers can show Windows “Unknown publisher” or SmartScreen warn
 5. Commit release changes.
 6. Create a semantic version tag, for example `v0.1.2`.
 7. Run `.\scripts\package.ps1` from that tag. Passing `-Version` can package a dirty tree, so only use it for local testing unless the working tree is clean.
-8. Smoke-test `artifacts\installer\RegionShareSetup-<version>.exe` on a Windows machine.
+8. Confirm `artifacts\installer\RegionShareSetup-<version>.exe.sha256` was created.
+9. Smoke-test `artifacts\installer\RegionShareSetup-<version>.exe` on a Windows machine.

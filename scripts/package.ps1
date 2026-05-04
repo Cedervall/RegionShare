@@ -92,4 +92,10 @@ if ($LASTEXITCODE -ne 0) {
     throw "Inno Setup compiler failed."
 }
 
-Write-Host "Installer created at $(Join-Path $installerDir "RegionShareSetup-$Version.exe")"
+$installerPath = Join-Path $installerDir "RegionShareSetup-$Version.exe"
+$checksumPath = "$installerPath.sha256"
+$checksum = Get-FileHash $installerPath -Algorithm SHA256
+"$($checksum.Hash.ToLowerInvariant())  $(Split-Path $installerPath -Leaf)" | Set-Content -Path $checksumPath -Encoding ascii
+
+Write-Host "Installer created at $installerPath"
+Write-Host "SHA-256 checksum created at $checksumPath"
