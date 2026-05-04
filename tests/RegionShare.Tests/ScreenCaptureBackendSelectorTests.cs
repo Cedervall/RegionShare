@@ -21,10 +21,10 @@ public sealed class ScreenCaptureBackendSelectorTests
     }
 
     [Fact]
-    public void SelectUsesGdiWhenCursorCaptureIsEnabled()
+    public void SelectUsesDirect3DWhenSupportedAndCursorCaptureIsEnabled()
     {
         var backend = ScreenCaptureBackendSelector.Select(true, true);
 
-        Assert.Equal(ScreenCaptureBackend.Gdi, backend);
+        Assert.Equal(ScreenCaptureBackend.Direct3DDesktopDuplication, backend);
     }
 }

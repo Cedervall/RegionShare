@@ -32,7 +32,7 @@ public partial class App : Application
         var previewWindowController = new PreviewWindowController();
         var previewBlackoutController = new PreviewBlackoutController();
         var frameTimingTelemetry = new FrameTimingTelemetry();
-        var overlayWindow = new OverlayWindow(overlayState, new DpiService(), new WindowCaptureExclusionService(), new WindowClickThroughService(), frameTimingTelemetry);
+        var overlayWindow = new OverlayWindow(overlayState, new DpiService(), new WindowCaptureExclusionService(), new WindowClickThroughService(), frameTimingTelemetry, captureService);
         var previewWindow = new PreviewWindow(captureService, overlayWindow.GetCaptureRegion, previewWindowController, frameTimingTelemetry, previewBlackoutController);
         var controlWindow = new ControlWindow(captureService, overlayWindow.GetCaptureRegion, overlayWindow, previewWindowController, previewBlackoutController, hotkeyService, cursorCaptureSettings, captureFrameRateSettings);
 

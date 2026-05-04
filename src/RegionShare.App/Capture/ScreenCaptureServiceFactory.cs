@@ -6,7 +6,7 @@ public static class ScreenCaptureServiceFactory
     {
         return ScreenCaptureBackendSelector.Select(cursorCaptureSettings.IsCursorCaptureEnabled, backendSupport.IsDirect3DDesktopDuplicationSupported) switch
         {
-            ScreenCaptureBackend.Direct3DDesktopDuplication => new Direct3DDesktopDuplicationScreenCaptureService(captureFrameRateSettings),
+            ScreenCaptureBackend.Direct3DDesktopDuplication => new Direct3DDesktopDuplicationScreenCaptureService(cursorCaptureSettings, captureFrameRateSettings),
             _ => new GdiScreenCaptureService(cursorCaptureSettings, captureFrameRateSettings)
         };
     }

@@ -18,19 +18,23 @@ public partial class OverlayWindow : Window, IOverlayController
     private readonly IWindowCaptureExclusionService _captureExclusionService;
     private readonly IWindowClickThroughService _clickThroughService;
     private readonly IFrameTimingTelemetry _frameTimingTelemetry;
+    private readonly ICaptureBackendStatus _captureBackendStatus;
     private bool _isStatusVisible = true;
     private bool _isLatencyVisible = true;
 
-    public OverlayWindow(IOverlayStateService overlayState, IDpiService dpiService, IWindowCaptureExclusionService captureExclusionService, IWindowClickThroughService clickThroughService, IFrameTimingTelemetry frameTimingTelemetry)
+    public OverlayWindow(IOverlayStateService overlayState, IDpiService dpiService, IWindowCaptureExclusionService captureExclusionService, IWindowClickThroughService clickThroughService, IFrameTimingTelemetry frameTimingTelemetry, ICaptureBackendStatus captureBackendStatus)
     {
         _overlayState = overlayState;
         _dpiService = dpiService;
         _captureExclusionService = captureExclusionService;
         _clickThroughService = clickThroughService;
         _frameTimingTelemetry = frameTimingTelemetry;
+        _captureBackendStatus = captureBackendStatus;
         InitializeComponent();
         FrameTimingText.Text = FrameTimingLabelFormatter.Format(_frameTimingTelemetry.Current);
+        CaptureBackendText.Text = CaptureBackendLabelFormatter.Format(_captureBackendStatus.CurrentBackend);
         _frameTimingTelemetry.TimingUpdated += FrameTimingTelemetry_TimingUpdated;
+        _captureBackendStatus.BackendChanged += CaptureBackendStatus_BackendChanged;
         UpdateSizeText();
         UpdateLockVisualState();
     }
@@ -89,6 +93,7 @@ public partial class OverlayWindow : Window, IOverlayController
     protected override void OnClosed(EventArgs e)
     {
         _frameTimingTelemetry.TimingUpdated -= FrameTimingTelemetry_TimingUpdated;
+        _captureBackendStatus.BackendChanged -= CaptureBackendStatus_BackendChanged;
         base.OnClosed(e);
     }
 
@@ -221,6 +226,17 @@ public partial class OverlayWindow : Window, IOverlayController
         FrameTimingText.Text = FrameTimingLabelFormatter.Format(e);
     }
 
+    private void CaptureBackendStatus_BackendChanged(object? sender, EventArgs e)
+    {
+        if (!Dispatcher.CheckAccess())
+        {
+            Dispatcher.BeginInvoke(() => CaptureBackendStatus_BackendChanged(sender, e));
+            return;
+        }
+
+        CaptureBackendText.Text = CaptureBackendLabelFormatter.Format(_captureBackendStatus.CurrentBackend);
+    }
+
     private void UpdateSizeText()
     {
         if (SizeText is null)
@@ -249,6 +265,7 @@ public partial class OverlayWindow : Window, IOverlayController
         var statusVisibility = _isStatusVisible ? Visibility.Visible : Visibility.Collapsed;
         SizeText.Visibility = statusVisibility;
         LockStatusText.Visibility = statusVisibility;
+        CaptureBackendText.Visibility = statusVisibility;
         FrameTimingText.Visibility = _isLatencyVisible ? Visibility.Visible : Visibility.Collapsed;
     }
 

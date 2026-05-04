@@ -4,7 +4,7 @@ public static class ScreenCaptureBackendSelector
 {
     public static ScreenCaptureBackend Select(bool isCursorCaptureEnabled, bool isDirect3DDesktopDuplicationSupported)
     {
-        if (isCursorCaptureEnabled || !isDirect3DDesktopDuplicationSupported)
+        if (!isDirect3DDesktopDuplicationSupported)
         {
             return ScreenCaptureBackend.Gdi;
         }

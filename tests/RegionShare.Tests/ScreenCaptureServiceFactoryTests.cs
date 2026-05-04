@@ -21,11 +21,11 @@ public sealed class ScreenCaptureServiceFactoryTests
     }
 
     [Fact]
-    public void CreateReturnsGdiServiceWhenCursorCaptureIsEnabled()
+    public void CreateReturnsDirect3DServiceWhenCursorCaptureIsEnabledAndDirect3DIsSupported()
     {
         var service = ScreenCaptureServiceFactory.Create(new CursorCaptureSettings { IsCursorCaptureEnabled = true }, new CaptureFrameRateSettings(), new StubBackendSupport(true));
 
-        Assert.IsType<GdiScreenCaptureService>(service);
+        Assert.IsType<Direct3DDesktopDuplicationScreenCaptureService>(service);
     }
 
     private sealed class StubBackendSupport : IScreenCaptureBackendSupport

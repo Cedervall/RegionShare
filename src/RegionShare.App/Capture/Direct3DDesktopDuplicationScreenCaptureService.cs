@@ -12,6 +12,7 @@ using Vortice.Mathematics;
 
 public sealed class Direct3DDesktopDuplicationScreenCaptureService : IScreenCaptureService, IDisposable
 {
+    private readonly ICursorCaptureSettings _cursorCaptureSettings;
     private readonly ICaptureFrameRateSettings _captureFrameRateSettings;
     private readonly object _syncRoot = new();
     private CaptureRegion? _region;
@@ -20,7 +21,13 @@ public sealed class Direct3DDesktopDuplicationScreenCaptureService : IScreenCapt
     private bool _isDisposed;
 
     public Direct3DDesktopDuplicationScreenCaptureService(ICaptureFrameRateSettings captureFrameRateSettings)
+        : this(new CursorCaptureSettings(), captureFrameRateSettings)
     {
+    }
+
+    public Direct3DDesktopDuplicationScreenCaptureService(ICursorCaptureSettings cursorCaptureSettings, ICaptureFrameRateSettings captureFrameRateSettings)
+    {
+        _cursorCaptureSettings = cursorCaptureSettings;
         _captureFrameRateSettings = captureFrameRateSettings;
     }
 
@@ -76,7 +83,7 @@ public sealed class Direct3DDesktopDuplicationScreenCaptureService : IScreenCapt
     {
         try
         {
-            using var session = Direct3DDesktopDuplicationSession.Create(region);
+            using var session = Direct3DDesktopDuplicationSession.Create(region, _cursorCaptureSettings);
             using var timer = new PeriodicTimer(CaptureFrameRateCalculator.ToInterval(_captureFrameRateSettings.FramesPerSecond));
             while (await timer.WaitForNextTickAsync(cancellationToken).ConfigureAwait(false))
             {
@@ -109,24 +116,30 @@ public sealed class Direct3DDesktopDuplicationScreenCaptureService : IScreenCapt
     private sealed class Direct3DDesktopDuplicationSession : IDisposable
     {
         private readonly CaptureRegion _relativeRegion;
+        private readonly CaptureRegion _screenRegion;
+        private readonly ICursorCaptureSettings _cursorCaptureSettings;
         private readonly ID3D11Device _device;
         private readonly ID3D11DeviceContext _context;
         private readonly IDXGIOutputDuplication _duplication;
         private readonly ID3D11Texture2D _stagingTexture;
+        private readonly GdiCursorOverlayBuffer _cursorOverlayBuffer;
         private readonly byte[] _pixels;
         private bool _frameAcquired;
 
-        private Direct3DDesktopDuplicationSession(CaptureRegion relativeRegion, ID3D11Device device, ID3D11DeviceContext context, IDXGIOutputDuplication duplication, ID3D11Texture2D stagingTexture)
+        private Direct3DDesktopDuplicationSession(CaptureRegion relativeRegion, CaptureRegion screenRegion, ICursorCaptureSettings cursorCaptureSettings, ID3D11Device device, ID3D11DeviceContext context, IDXGIOutputDuplication duplication, ID3D11Texture2D stagingTexture)
         {
             _relativeRegion = relativeRegion;
+            _screenRegion = screenRegion;
+            _cursorCaptureSettings = cursorCaptureSettings;
             _device = device;
             _context = context;
             _duplication = duplication;
             _stagingTexture = stagingTexture;
+            _cursorOverlayBuffer = new GdiCursorOverlayBuffer();
             _pixels = new byte[relativeRegion.Width * relativeRegion.Height * 4];
         }
 
-        public static Direct3DDesktopDuplicationSession Create(CaptureRegion region)
+        public static Direct3DDesktopDuplicationSession Create(CaptureRegion region, ICursorCaptureSettings cursorCaptureSettings)
         {
             using var factory = DXGI.CreateDXGIFactory1<IDXGIFactory1>();
             var outputSelection = Direct3DOutputSelector.Select(factory, region) ?? throw new InvalidOperationException("Capture region must fit within one attached display output for GPU capture.");
@@ -140,7 +153,7 @@ public sealed class Direct3DDesktopDuplicationScreenCaptureService : IScreenCapt
 
             var stagingTexture = CreateStagingTexture(device, outputSelection.MappedRegion.RelativeRegion);
             outputSelection.Dispose();
-            return new Direct3DDesktopDuplicationSession(outputSelection.MappedRegion.RelativeRegion, device, context, duplication, stagingTexture);
+            return new Direct3DDesktopDuplicationSession(outputSelection.MappedRegion.RelativeRegion, region, cursorCaptureSettings, device, context, duplication, stagingTexture);
         }
 
         public BitmapSource? TryCaptureFrame()
@@ -182,6 +195,7 @@ public sealed class Direct3DDesktopDuplicationScreenCaptureService : IScreenCapt
 
         public void Dispose()
         {
+            _cursorOverlayBuffer.Dispose();
             _stagingTexture.Dispose();
             _duplication.Dispose();
             _context.Dispose();
@@ -222,6 +236,8 @@ public sealed class Direct3DDesktopDuplicationScreenCaptureService : IScreenCapt
             {
                 _context.Unmap(_stagingTexture, 0);
             }
+
+            _cursorOverlayBuffer.DrawCursor(_pixels, _screenRegion, _cursorCaptureSettings);
 
             var bitmap = BitmapSource.Create(_relativeRegion.Width, _relativeRegion.Height, 96, 96, PixelFormats.Bgra32, null, _pixels, _relativeRegion.Width * 4);
             bitmap.Freeze();

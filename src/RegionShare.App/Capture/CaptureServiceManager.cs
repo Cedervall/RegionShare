@@ -1,6 +1,6 @@
 namespace RegionShare.App.Capture;
 
-public sealed class CaptureServiceManager : IScreenCaptureService, IDisposable
+public sealed class CaptureServiceManager : IScreenCaptureService, ICaptureBackendStatus, IDisposable
 {
     private readonly ICursorCaptureSettings _cursorCaptureSettings;
     private readonly ICaptureFrameRateSettings _captureFrameRateSettings;
@@ -13,7 +13,7 @@ public sealed class CaptureServiceManager : IScreenCaptureService, IDisposable
     public CaptureServiceManager(ICursorCaptureSettings cursorCaptureSettings, ICaptureFrameRateSettings captureFrameRateSettings, IScreenCaptureBackendSupport backendSupport)
         : this(cursorCaptureSettings, captureFrameRateSettings, backendSupport, backend => backend switch
         {
-            ScreenCaptureBackend.Direct3DDesktopDuplication => new Direct3DDesktopDuplicationScreenCaptureService(captureFrameRateSettings),
+            ScreenCaptureBackend.Direct3DDesktopDuplication => new Direct3DDesktopDuplicationScreenCaptureService(cursorCaptureSettings, captureFrameRateSettings),
             _ => new GdiScreenCaptureService(cursorCaptureSettings, captureFrameRateSettings)
         })
     {
@@ -31,7 +31,11 @@ public sealed class CaptureServiceManager : IScreenCaptureService, IDisposable
 
     public event EventHandler<CaptureFailedEventArgs>? CaptureFailed;
 
+    public event EventHandler? BackendChanged;
+
     public bool IsCapturing => _currentService?.IsCapturing == true;
+
+    public ScreenCaptureBackend? CurrentBackend { get; private set; }
 
     public void Start(CaptureRegion region)
     {
@@ -45,6 +49,7 @@ public sealed class CaptureServiceManager : IScreenCaptureService, IDisposable
             service.FrameCaptured += CurrentService_FrameCaptured;
             service.CaptureFailed += CurrentService_CaptureFailed;
             _currentService = service;
+            SetCurrentBackend(backend);
             try
             {
                 service.Start(region);
@@ -96,6 +101,18 @@ public sealed class CaptureServiceManager : IScreenCaptureService, IDisposable
         }
 
         _currentService = null;
+        SetCurrentBackend(null);
+    }
+
+    private void SetCurrentBackend(ScreenCaptureBackend? backend)
+    {
+        if (CurrentBackend == backend)
+        {
+            return;
+        }
+
+        CurrentBackend = backend;
+        BackendChanged?.Invoke(this, EventArgs.Empty);
     }
 
     private void CurrentService_FrameCaptured(object? sender, CapturedFrameEventArgs e)

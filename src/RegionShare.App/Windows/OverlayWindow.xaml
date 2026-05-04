@@ -62,6 +62,14 @@
                        Foreground="White"
                        FontWeight="SemiBold"
                        Text="Unlocked" />
+            <TextBlock x:Name="CaptureBackendText"
+                       Margin="8,0,0,0"
+                       VerticalAlignment="Center"
+                       Padding="8,3"
+                       Background="#CC111827"
+                       Foreground="White"
+                       FontWeight="SemiBold"
+                       Text="Capture stopped" />
             <TextBlock x:Name="FrameTimingText"
                        Margin="8,0,0,0"
                        VerticalAlignment="Center"
