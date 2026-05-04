@@ -1,7 +1,7 @@
 # Separate Control Window From Preview
 
 ## Goal
-Keep the Teams-shared preview window clean by moving all controls into a separate control/settings window.
+Keep the meeting-shared preview window clean by moving all controls into a separate control/settings window.
 
 ## Tasks
 - Add `ControlWindow` for capture and overlay controls.
@@ -18,7 +18,7 @@ Keep the Teams-shared preview window clean by moving all controls into a separat
 - Preview window contains only captured content and no control buttons/status text.
 - Control window owns capture, overlay, and preview-mode controls.
 - Borderless preview can be toggled from the control window.
-- Borderless preview remains shareable in Teams as a normal application window.
+- Borderless preview remains shareable in meeting software as a normal application window.
 - Preview close stops capture, disposes capture resources, closes other windows, and shuts down the app.
 - Control window close shuts down the app.
 - Borderless preview has no resize frame or visible window chrome.

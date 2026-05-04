@@ -1,7 +1,7 @@
 # Add Preview Window
 
 ## Goal
-Create the Teams-shareable preview window.
+Create the meeting-shareable preview window.
 
 ## Tasks
 - Render captured frames into preview.
@@ -11,7 +11,7 @@ Create the Teams-shareable preview window.
 - Keep preview as a normal application window.
 
 ## Acceptance Criteria
-- Preview window is visible in Teams as a normal app window.
+- Preview window is visible in meeting software as a normal app window.
 - Preview scales content without distortion.
 - Preview can start and stop capture.
 - Tests cover aspect-ratio fit calculations and capture lifecycle logic.

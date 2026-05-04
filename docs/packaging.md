@@ -33,6 +33,8 @@ v0.1.2
 
 When `scripts/package.ps1` is run without `-Version`, it reads the exact current git tag and expects it to match `vMAJOR.MINOR.PATCH`.
 
+For a release, update `src\RegionShare.App\RegionShare.App.csproj` so `<Version>` matches the release tag without the `v` prefix. For example, tag `v0.1.2` should use `<Version>0.1.2</Version>`.
+
 You can also pass the version explicitly:
 
 ```powershell
@@ -114,7 +116,7 @@ Unsigned installers can show Windows “Unknown publisher” or SmartScreen warn
 ## Release Checklist
 
 1. Ensure working tree is clean.
-2. Update project and installer fallback versions if needed.
+2. Update `src\RegionShare.App\RegionShare.App.csproj` `<Version>` to match the release tag without the `v` prefix.
 3. Run `dotnet build "RegionShare.slnx"`.
 4. Run `dotnet test "RegionShare.slnx"`.
 5. Commit release changes.

@@ -344,7 +344,13 @@
                         </Border>
                         </Grid>
                     </Grid>
-
+                    <TextBlock x:Name="AppVersionText"
+                               HorizontalAlignment="Center"
+                               Margin="0,2,0,0"
+                               Foreground="#94A3B8"
+                               FontSize="12"
+                               FontWeight="SemiBold"
+                               Text="Version unknown" />
         </StackPanel>
     </Grid>
 </Window>

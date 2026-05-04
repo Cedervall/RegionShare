@@ -22,5 +22,18 @@ Swap the default capture path from CPU-heavy GDI allocation/copy work to a Direc
 - App defaults to GPU-backed capture when available.
 - Existing GDI capture remains available as fallback.
 - 30/60/90/120 FPS settings still work.
-- Preview remains Teams-shareable and controls-free.
+- Preview remains meeting-shareable and controls-free.
 - `dotnet build` and `dotnet test` pass.
+
+## Status
+Completed in this ticket batch.
+
+## Verification
+- Direct3D Desktop Duplication backend is used by default when supported and cursor capture is disabled.
+- GDI remains available as fallback and for cursor capture.
+- Backend selection, factory behavior, output-region mapping, and invalid mappings are covered by tests.
+- 30/60/90/120 FPS settings remain available.
+- Region Share Window remains controls-free and shareable by meeting software.
+- `dotnet build "RegionShare.slnx"` passed.
+- `dotnet test "RegionShare.slnx"` passed.
+- Reviewer outcome: `pass`.

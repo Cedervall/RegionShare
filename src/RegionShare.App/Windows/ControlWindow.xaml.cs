@@ -4,6 +4,7 @@ using System.Windows.Interop;
 using System.Windows.Media;
 using RegionShare.App.Capture;
 using RegionShare.App.Hotkeys;
+using RegionShare.App.Metadata;
 using RegionShare.App.Overlay;
 using RegionShare.App.Preview;
 
@@ -42,6 +43,7 @@ public partial class ControlWindow : Window
         _previewWindowController.PreviewModeChanged += PreviewWindowController_PreviewModeChanged;
 
         InitializeComponent();
+        AppVersionText.Text = AppVersionProvider.GetDisplayVersion(typeof(ControlWindow).Assembly);
         CaptureFrameRateComboBox.ItemsSource = CaptureFrameRateCalculator.SupportedFramesPerSecond;
         CaptureFrameRateComboBox.SelectedItem = CaptureFrameRateCalculator.Sanitize(_captureFrameRateSettings.FramesPerSecond);
         UpdateCursorCaptureState();

@@ -7,7 +7,7 @@ Improve control speed for common meeting workflows.
 - Implement global hotkey service.
 - Implement `Ctrl + Alt + L` for lock toggle.
 - Add overlay show/hide hotkey.
-- Keep lock/unlock and show/hide overlay controls in the control window, so the Teams-shared preview remains content-only.
+- Keep lock/unlock and show/hide overlay controls in the control window, so the meeting-shared preview remains content-only.
 - Make locked overlay click-through while keeping the capture region fixed.
 - Add presets: 1280x720, 1600x900, 1920x1080.
 - Add aspect ratio modes: Free, 16:9, 16:10, 4:3.
