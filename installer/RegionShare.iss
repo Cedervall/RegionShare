@@ -2,7 +2,7 @@
 #define MyAppPublisher "RegionShare"
 #define MyAppExeName "RegionShare.exe"
 #ifndef MyAppVersion
-#define MyAppVersion "0.1.0"
+#define MyAppVersion "0.1.1"
 #endif
 #ifndef PublishDir
 #define PublishDir "..\artifacts\publish\RegionShare"
