@@ -7,6 +7,8 @@ using RegionShare.App.Hotkeys;
 using RegionShare.App.Metadata;
 using RegionShare.App.Overlay;
 using RegionShare.App.Preview;
+using RegionShare.App.Settings;
+using RegionShare.App.Windowing;
 
 namespace RegionShare.App.Windows;
 
@@ -15,6 +17,7 @@ public partial class ControlWindow : Window
     private readonly IScreenCaptureService _captureService;
     private readonly PreviewCaptureController _captureController;
     private readonly IOverlayController _overlayController;
+    private readonly Window _previewWindow;
     private readonly IPreviewWindowController _previewWindowController;
     private readonly IPreviewBlackoutController _previewBlackoutController;
     private readonly IGlobalHotkeyService _hotkeyService;
@@ -28,11 +31,12 @@ public partial class ControlWindow : Window
     private Rect _lastRegionBounds;
     private bool _isCursorCaptureRestartRequired;
 
-    public ControlWindow(IScreenCaptureService captureService, Func<CaptureRegion> regionProvider, IOverlayController overlayController, IPreviewWindowController previewWindowController, IPreviewBlackoutController previewBlackoutController, IGlobalHotkeyService hotkeyService, ICursorCaptureSettings cursorCaptureSettings, ICaptureFrameRateSettings captureFrameRateSettings)
+    public ControlWindow(IScreenCaptureService captureService, Func<CaptureRegion> regionProvider, IOverlayController overlayController, Window previewWindow, IPreviewWindowController previewWindowController, IPreviewBlackoutController previewBlackoutController, IGlobalHotkeyService hotkeyService, ICursorCaptureSettings cursorCaptureSettings, ICaptureFrameRateSettings captureFrameRateSettings)
     {
         _captureService = captureService;
         _captureController = new PreviewCaptureController(captureService, regionProvider);
         _overlayController = overlayController;
+        _previewWindow = previewWindow;
         _previewWindowController = previewWindowController;
         _previewBlackoutController = previewBlackoutController;
         _hotkeyService = hotkeyService;
@@ -220,6 +224,12 @@ public partial class ControlWindow : Window
         _regionSetupWindow.Show();
     }
 
+    private void ResetWindowsButton_Click(object sender, RoutedEventArgs e)
+    {
+        ResetWindowPlacement();
+        OverlayStatusText.Text = "Windows reset to active display.";
+    }
+
     private void ExitButton_Click(object sender, RoutedEventArgs e)
     {
         Application.Current.Shutdown();
@@ -351,6 +361,33 @@ public partial class ControlWindow : Window
         OverlayVisibilityIcon.Text = _overlayController.IsOverlayVisible ? "🙈" : "👁";
         OverlayLockToggleButton.Style = (Style)FindResource(_overlayController.IsLocked ? "WarningButtonStyle" : "SecondaryButtonStyle");
         OverlayStatusText.Text = controlState.StatusText;
+    }
+
+    private void ResetWindowPlacement()
+    {
+        var workAreas = ScreenWorkAreaProvider.GetActiveWorkAreas();
+        var overlayBounds = WindowPlacementCalculator.EnsureVisible(new Rect(UserSettings.Default.OverlayLeft, UserSettings.Default.OverlayTop, _overlayController.RegionBounds.Width, _overlayController.RegionBounds.Height), new Size(320, 180), workAreas, new Point(24, 24));
+        var previewBounds = WindowPlacementCalculator.EnsureVisible(new Rect(UserSettings.Default.PreviewLeft, UserSettings.Default.PreviewTop, _previewWindow.Width, _previewWindow.Height), new Size(_previewWindow.MinWidth, _previewWindow.MinHeight), workAreas, new Point(80, 80));
+        var controlBounds = WindowPlacementCalculator.EnsureVisible(new Rect(UserSettings.Default.ControlLeft, UserSettings.Default.ControlTop, Width, ActualHeight > 0 ? ActualHeight : UserSettings.Default.ControlHeight), new Size(MinWidth, 260), workAreas, new Point(136, 136));
+
+        _overlayController.SetRegionBounds(overlayBounds);
+        ApplyWindowBounds(_previewWindow, previewBounds);
+        ApplyControlWindowBounds(controlBounds);
+    }
+
+    private static void ApplyWindowBounds(Window window, Rect bounds)
+    {
+        window.Left = bounds.Left;
+        window.Top = bounds.Top;
+        window.Width = bounds.Width;
+        window.Height = bounds.Height;
+    }
+
+    private void ApplyControlWindowBounds(Rect bounds)
+    {
+        Left = bounds.Left;
+        Top = bounds.Top;
+        Width = bounds.Width;
     }
 
     private void UpdateOverlayDisplayOptionsState()

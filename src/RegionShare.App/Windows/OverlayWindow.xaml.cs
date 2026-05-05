@@ -170,6 +170,16 @@ public partial class OverlayWindow : Window, IOverlayController
         return true;
     }
 
+    public void SetRegionBounds(Rect bounds)
+    {
+        Left = bounds.Left;
+        Top = bounds.Top;
+        Width = Math.Max(bounds.Width, MinWidth);
+        Height = Math.Max(bounds.Height, MinHeight);
+        UpdateSizeText();
+        OverlayStateChanged?.Invoke(this, EventArgs.Empty);
+    }
+
     public void SetAspectRatioMode(AspectRatioMode aspectRatioMode)
     {
         _overlayState.AspectRatioMode = aspectRatioMode;

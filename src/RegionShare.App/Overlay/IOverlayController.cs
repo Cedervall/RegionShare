@@ -30,6 +30,8 @@ public interface IOverlayController
 
     bool TryApplyRegionBounds(Rect bounds);
 
+    void SetRegionBounds(Rect bounds);
+
     void SetAspectRatioMode(AspectRatioMode aspectRatioMode);
 
     void SetStatusVisibility(bool isVisible);

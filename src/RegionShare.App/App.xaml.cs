@@ -34,7 +34,7 @@ public partial class App : Application
         var frameTimingTelemetry = new FrameTimingTelemetry();
         var overlayWindow = new OverlayWindow(overlayState, new DpiService(), new WindowCaptureExclusionService(), new WindowClickThroughService(), frameTimingTelemetry, captureService);
         var previewWindow = new PreviewWindow(captureService, overlayWindow.GetCaptureRegion, previewWindowController, frameTimingTelemetry, previewBlackoutController);
-        var controlWindow = new ControlWindow(captureService, overlayWindow.GetCaptureRegion, overlayWindow, previewWindowController, previewBlackoutController, hotkeyService, cursorCaptureSettings, captureFrameRateSettings);
+        var controlWindow = new ControlWindow(captureService, overlayWindow.GetCaptureRegion, overlayWindow, previewWindow, previewWindowController, previewBlackoutController, hotkeyService, cursorCaptureSettings, captureFrameRateSettings);
 
         ApplySettings(settings, overlayWindow, previewWindow, controlWindow, previewWindowController);
 
@@ -47,10 +47,12 @@ public partial class App : Application
 
     private static void ApplySettings(UserSettings settings, OverlayWindow overlayWindow, PreviewWindow previewWindow, ControlWindow controlWindow, IPreviewWindowController previewWindowController)
     {
-        overlayWindow.Left = settings.OverlayLeft;
-        overlayWindow.Top = settings.OverlayTop;
-        overlayWindow.Width = settings.OverlayWidth;
-        overlayWindow.Height = settings.OverlayHeight;
+        var workAreas = ScreenWorkAreaProvider.GetActiveWorkAreas();
+        var overlayBounds = WindowPlacementCalculator.EnsureVisible(new Rect(settings.OverlayLeft, settings.OverlayTop, settings.OverlayWidth, settings.OverlayHeight), new Size(overlayWindow.MinWidth, overlayWindow.MinHeight), workAreas, new Point(24, 24));
+        var previewBounds = WindowPlacementCalculator.EnsureVisible(new Rect(settings.PreviewLeft, settings.PreviewTop, settings.PreviewWidth, settings.PreviewHeight), new Size(previewWindow.MinWidth, previewWindow.MinHeight), workAreas, new Point(80, 80));
+        var controlBounds = WindowPlacementCalculator.EnsureVisible(new Rect(settings.ControlLeft, settings.ControlTop, settings.ControlWidth, settings.ControlHeight), new Size(controlWindow.MinWidth, 260), workAreas, new Point(136, 136));
+
+        overlayWindow.SetRegionBounds(overlayBounds);
         overlayWindow.SetAspectRatioMode(settings.AspectRatioMode);
         overlayWindow.SetStatusVisibility(settings.IsOverlayStatusVisible ?? true);
         overlayWindow.SetLatencyVisibility(settings.IsOverlayLatencyVisible ?? true);
@@ -59,15 +61,15 @@ public partial class App : Application
             overlayWindow.ToggleLock();
         }
 
-        previewWindow.Left = settings.PreviewLeft;
-        previewWindow.Top = settings.PreviewTop;
-        previewWindow.Width = settings.PreviewWidth;
-        previewWindow.Height = settings.PreviewHeight;
+        previewWindow.Left = previewBounds.Left;
+        previewWindow.Top = previewBounds.Top;
+        previewWindow.Width = previewBounds.Width;
+        previewWindow.Height = previewBounds.Height;
         previewWindowController.SetMode(settings.IsPreviewBorderless ? PreviewWindowMode.Borderless : PreviewWindowMode.Normal);
 
-        controlWindow.Left = settings.ControlLeft;
-        controlWindow.Top = settings.ControlTop;
-        controlWindow.Width = settings.ControlWidth;
+        controlWindow.Left = controlBounds.Left;
+        controlWindow.Top = controlBounds.Top;
+        controlWindow.Width = controlBounds.Width;
     }
 
     private static UserSettings CreateSettings(OverlayWindow overlayWindow, PreviewWindow previewWindow, ControlWindow controlWindow, IPreviewWindowController previewWindowController, ICursorCaptureSettings cursorCaptureSettings, ICaptureFrameRateSettings captureFrameRateSettings)
