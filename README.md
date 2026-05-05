@@ -21,7 +21,7 @@ The installer is self-contained. You do not need to install .NET separately.
 Installer artifact:
 
 ```text
-RegionShareSetup-0.1.3.exe
+RegionShareSetup-0.1.4.exe
 ```
 
 The installer is currently unsigned. Windows may show an `Unknown publisher` or SmartScreen warning until code signing is added.
@@ -31,13 +31,13 @@ The installer is currently unsigned. Windows may show an `Unknown publisher` or 
 Each installer release includes a SHA-256 checksum file:
 
 ```text
-RegionShareSetup-0.1.3.exe.sha256
+RegionShareSetup-0.1.4.exe.sha256
 ```
 
 To calculate the hash locally on Windows:
 
 ```powershell
-Get-FileHash ".\RegionShareSetup-0.1.3.exe" -Algorithm SHA256
+Get-FileHash ".\RegionShareSetup-0.1.4.exe" -Algorithm SHA256
 ```
 
 Compare the output with the contents of the `.sha256` file to verify the installer has not been changed.
@@ -102,7 +102,7 @@ Prerequisites for installer creation:
 - .NET SDK
 - Inno Setup 6
 
-Build the installer from a version tag such as `v0.1.3`:
+Build the installer from a version tag such as `v0.1.4`:
 
 ```powershell
 .\scripts\package.ps1
@@ -111,14 +111,14 @@ Build the installer from a version tag such as `v0.1.3`:
 Or pass a version explicitly:
 
 ```powershell
-.\scripts\package.ps1 -Version 0.1.3
+.\scripts\package.ps1 -Version 0.1.4
 ```
 
 Installer output:
 
 ```text
-artifacts\installer\RegionShareSetup-0.1.3.exe
-artifacts\installer\RegionShareSetup-0.1.3.exe.sha256
+artifacts\installer\RegionShareSetup-0.1.4.exe
+artifacts\installer\RegionShareSetup-0.1.4.exe.sha256
 ```
 
 See `docs/packaging.md` for release and installer details.

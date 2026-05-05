@@ -28,17 +28,17 @@ The source PNG and individual icon sizes are also kept in the same folder.
 Release tags use semantic versioning with a `v` prefix:
 
 ```text
-v0.1.3
+v0.1.4
 ```
 
 When `scripts/package.ps1` is run without `-Version`, it reads the exact current git tag and expects it to match `vMAJOR.MINOR.PATCH`.
 
-For a release, update `src\RegionShare.App\RegionShare.App.csproj` so `<Version>` matches the release tag without the `v` prefix. For example, tag `v0.1.3` should use `<Version>0.1.3</Version>`.
+For a release, update `src\RegionShare.App\RegionShare.App.csproj` so `<Version>` matches the release tag without the `v` prefix. For example, tag `v0.1.4` should use `<Version>0.1.4</Version>`.
 
 You can also pass the version explicitly:
 
 ```powershell
-.\scripts\package.ps1 -Version 0.1.3
+.\scripts\package.ps1 -Version 0.1.4
 ```
 
 ## Build Installer
@@ -58,11 +58,11 @@ The script:
 - writes the installer to `artifacts\installer`
 - writes a SHA-256 checksum file next to the installer
 
-Expected installer output for version `0.1.3`:
+Expected installer output for version `0.1.4`:
 
 ```text
-artifacts\installer\RegionShareSetup-0.1.3.exe
-artifacts\installer\RegionShareSetup-0.1.3.exe.sha256
+artifacts\installer\RegionShareSetup-0.1.4.exe
+artifacts\installer\RegionShareSetup-0.1.4.exe.sha256
 ```
 
 ## Verify Installer Integrity
@@ -72,13 +72,13 @@ Each installer build writes a `.sha256` file next to the installer. The checksum
 On Windows, users can calculate the installer hash with:
 
 ```powershell
-Get-FileHash ".\RegionShareSetup-0.1.3.exe" -Algorithm SHA256
+Get-FileHash ".\RegionShareSetup-0.1.4.exe" -Algorithm SHA256
 ```
 
 Compare the output hash to:
 
 ```text
-RegionShareSetup-0.1.3.exe.sha256
+RegionShareSetup-0.1.4.exe.sha256
 ```
 
 Checksum verification confirms file integrity. It does not replace code signing or prove publisher identity.
@@ -88,7 +88,7 @@ Checksum verification confirms file integrity. It does not replace code signing 
 To create only the self-contained app folder:
 
 ```powershell
-.\scripts\package.ps1 -Version 0.1.3 -SkipInstaller
+.\scripts\package.ps1 -Version 0.1.4 -SkipInstaller
 ```
 
 Output:
@@ -120,7 +120,7 @@ Unsigned installers can show Windows “Unknown publisher” or SmartScreen warn
 3. Run `dotnet build "RegionShare.slnx"`.
 4. Run `dotnet test "RegionShare.slnx"`.
 5. Commit release changes.
-6. Create a semantic version tag, for example `v0.1.3`.
+6. Create a semantic version tag, for example `v0.1.4`.
 7. Run `.\scripts\package.ps1` from that tag. Passing `-Version` can package a dirty tree, so only use it for local testing unless the working tree is clean.
 8. Confirm `artifacts\installer\RegionShareSetup-<version>.exe.sha256` was created.
 9. Smoke-test `artifacts\installer\RegionShareSetup-<version>.exe` on a Windows machine.
